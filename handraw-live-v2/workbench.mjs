@@ -379,7 +379,7 @@ async function copyCurrent() {
 }
 let genState = {status: 'idle', src: null, remote: false, revision: null, slow: false, errorText: '', errorKind: null, controller: null, timedOut: false};
 function renderGen() {
-  const resolved = resolveActive(loadSettings(localStorage));
+  const resolved = resolveActive(loadSettings(localStorage), location);
   setAlwaysValue('gen-provider-summary', resolved ? `${resolved.label} · ${resolved.model}` : '未配置模型 Key');
   $('gen-unconfigured').hidden = Boolean(resolved);
   const ready = workflow.resultStatus === 'ready';
@@ -411,6 +411,8 @@ function renderGen() {
     download.removeAttribute('href');
     download.setAttribute('aria-disabled', 'true');
   }
+  const onRelayPage = ['127.0.0.1', 'localhost'].includes(location.hostname);
+  $('gen-dashscope-link').hidden = !onRelayPage;
   $('gen-loading').hidden = !loading;
   $('gen-cancel').hidden = !loading;
   $('gen-slow').hidden = !(loading && genState.slow);
@@ -425,7 +427,7 @@ function renderGen() {
   $('gen-fallback-note').hidden = !offerFallback;
 }
 async function generateImage() {
-  const resolved = resolveActive(loadSettings(localStorage));
+  const resolved = resolveActive(loadSettings(localStorage), location);
   if (!resolved || workflow.resultStatus !== 'ready' || genState.status === 'loading') return;
   const revision = workflow.inputRevision;
   const prompt = workflow.output;

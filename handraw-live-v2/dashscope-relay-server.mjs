@@ -50,7 +50,17 @@ function readBody(req) {
   });
 }
 
-export async function startServer({port = 0, host = '127.0.0.1', baseUrl = DEFAULT_BASE_URL, fetch: fetchImpl, sleep} = {}) {
+function listen(server, port, host) {
+  return new Promise((resolve, reject) => {
+    const onError = err => { server.removeListener('listening', onListening); reject(err); };
+    const onListening = () => { server.removeListener('error', onError); resolve(); };
+    server.once('error', onError);
+    server.once('listening', onListening);
+    server.listen(port, host);
+  });
+}
+
+export async function startServer({port = 0, host = '127.0.0.1', baseUrl = DEFAULT_BASE_URL, fetch: fetchImpl, sleep, autoPort = false, portCandidates = null} = {}) {
   const server = http.createServer(async (req, res) => {
     const path = new URL(req.url, 'http://localhost').pathname;
     try {
@@ -71,11 +81,18 @@ export async function startServer({port = 0, host = '127.0.0.1', baseUrl = DEFAU
       res.end(JSON.stringify({error: {message: '请求体不是合法 JSON：' + String(err?.message || err)}}));
     }
   });
-  await new Promise((resolve, reject) => {
-    server.once('error', reject);
-    server.listen(port, host, resolve);
-  });
-  return server;
+  const candidates = portCandidates || (autoPort ? [port, port + 1, port + 2, port + 3, port + 4] : [port]);
+  let lastError = null;
+  for (const candidate of candidates) {
+    try {
+      await listen(server, candidate, host);
+      return server;
+    } catch (err) {
+      lastError = err;
+      if (!autoPort || err?.code !== 'EADDRINUSE') break;
+    }
+  }
+  throw lastError || new Error('无法监听端口');
 }
 
 const invokedDirectly = process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href;
@@ -84,16 +101,21 @@ if (invokedDirectly) {
   const baseUrl = argValue('--base-url', DEFAULT_BASE_URL);
   let server;
   try {
-    server = await startServer({port, baseUrl});
+    server = await startServer({port, baseUrl, autoPort: true});
   } catch (err) {
-    if (err?.code === 'EADDRINUSE') {
-      console.error('端口 ' + port + ' 已被占用（本机可能有别的静态服务在用，例如 python -m http.server）。');
-      console.error('请换一个端口，例如：node dashscope-relay-server.mjs --port 8900');
-      process.exit(1);
-    }
-    throw err;
+    console.error('无法启动本地服务：' + String(err?.message || err));
+    process.exit(1);
   }
-  console.log('工作台已启动：http://127.0.0.1:' + server.address().port + '/start-creating.html');
+  const actual = server.address().port;
+  if (actual !== port) console.log('端口 ' + port + ' 已被占用，已自动改用 ' + actual + '。');
+  console.log('工作台已启动：http://127.0.0.1:' + actual + '/start-creating.html');
   console.log('请从这个地址打开页面（而不是 GitHub Pages），否则浏览器会拦截本机 HTTP 转发请求。');
-  console.log('百炼转发接口：http://127.0.0.1:' + server.address().port + '/api/generate');
+  console.log('百炼转发接口：http://127.0.0.1:' + actual + '/api/generate');
+  if (process.platform === 'darwin' && !process.argv.includes('--no-open')) {
+    try {
+      const {spawn} = await import('node:child_process');
+      spawn('open', ['http://127.0.0.1:' + actual + '/start-creating.html'], {stdio: 'ignore', detached: true}).unref();
+      console.log('已尝试自动打开浏览器（如未弹出请手动打开上面的地址）。');
+    } catch {}
+  }
 }

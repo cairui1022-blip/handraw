@@ -9,6 +9,13 @@ export const PROVIDERS = [
 export const STORAGE_KEY = 'handraw.modelSettings.v1';
 export const GENERATION_TIMEOUT_MS = 600000;
 
+export function presetFromQuery(search) {
+  try {
+    const value = new URLSearchParams(String(search || '').replace(/^\?/, '')).get('provider') || '';
+    return PROVIDERS.some(p => p.id === value) ? value : '';
+  } catch { return ''; }
+}
+
 export function defaultSettings() {
   const providers = {};
   for (const p of PROVIDERS) providers[p.id] = {apiKey: '', model: p.model, baseUrl: p.baseUrl};
@@ -47,13 +54,47 @@ export function isAllowedBaseUrl(baseUrl) {
   return /^https:\/\//.test(v) || LOOPBACK_HTTP.test(v);
 }
 
-export function resolveActive(settings) {
+export const DEFAULT_RELAY_BASE = 'http://127.0.0.1:8787';
+
+function parseLoopback(value) {
+  try {
+    const u = new URL(String(value || ''));
+    if (!/^http:$/.test(u.protocol)) return null;
+    return ['127.0.0.1', 'localhost'].includes(u.hostname) ? u : null;
+  } catch { return null; }
+}
+
+// 百炼只能经本机转发服务访问。页面若本身就是由 relay 在 loopback 上托管，
+// 就让默认地址跟随当前端口，用户无需手动改端口。
+export function relayBaseFor(provider, baseUrl, location = null) {
+  const raw = String(baseUrl || '').trim().replace(/\/+$/, '');
+  if (provider !== 'dashscope') return raw;
+  const here = location && parseLoopback(location.origin);
+  if (!raw) return here ? here.origin : DEFAULT_RELAY_BASE;
+  const explicit = parseLoopback(raw);
+  if (!explicit) return raw;
+  const isDefaultPort = explicit.port === '' || explicit.port === '8787';
+  return here && isDefaultPort ? here.origin : raw;
+}
+
+// 页面上显示的是「跟随当前端口」的地址；保存时把它还原成默认占位，
+// 否则下次换端口启动会存成旧端口而连不上。
+export function persistableBaseUrl(provider, baseUrl, location = null) {
+  const raw = String(baseUrl || '').trim().replace(/\/+$/, '');
+  if (provider !== 'dashscope') return raw;
+  const here = location && parseLoopback(location.origin);
+  const shown = parseLoopback(raw);
+  if (here && shown && shown.origin === here.origin) return DEFAULT_RELAY_BASE;
+  return raw;
+}
+
+export function resolveActive(settings, location = null) {
   const preset = PROVIDERS.find(p => p.id === settings.active);
   const conf = settings.providers?.[settings.active];
   if (!preset || !conf) return null;
   const apiKey = conf.apiKey.trim();
   const model = conf.model.trim();
-  const baseUrl = conf.baseUrl.trim().replace(/\/+$/, '');
+  const baseUrl = relayBaseFor(preset.id, conf.baseUrl, location);
   if (!apiKey || !model || !isAllowedBaseUrl(baseUrl)) return null;
   return {id: preset.id, label: preset.label, baseUrl, model, apiKey};
 }

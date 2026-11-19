@@ -1,4 +1,4 @@
-import {PROVIDERS, defaultSettings, loadSettings, saveSettings, clearSettings, testConnectionRequest, testConnectionSuccessText, explainFetchFailure, isAllowedBaseUrl} from './image-gen.mjs';
+import {PROVIDERS, defaultSettings, loadSettings, saveSettings, clearSettings, testConnectionRequest, testConnectionSuccessText, explainFetchFailure, isAllowedBaseUrl, relayBaseFor, persistableBaseUrl, presetFromQuery} from './image-gen.mjs';
 
 const $ = id => document.getElementById(id);
 
@@ -8,12 +8,20 @@ function readForm() {
   for (const p of PROVIDERS) providers[p.id] = {apiKey: $('key-' + p.id).value, model: $('model-' + p.id).value, baseUrl: $('baseurl-' + p.id).value};
   return {active, providers};
 }
+function persistable(settings) {
+  const out = {active: settings.active, providers: {}};
+  for (const p of PROVIDERS) {
+    const conf = settings.providers[p.id];
+    out.providers[p.id] = {...conf, baseUrl: persistableBaseUrl(p.id, conf.baseUrl, location)};
+  }
+  return out;
+}
 function fillForm(settings) {
   for (const radio of document.querySelectorAll('input[name="active-provider"]')) radio.checked = radio.value === settings.active;
   for (const p of PROVIDERS) {
     $('key-' + p.id).value = settings.providers[p.id].apiKey;
     $('model-' + p.id).value = settings.providers[p.id].model;
-    $('baseurl-' + p.id).value = settings.providers[p.id].baseUrl;
+    $('baseurl-' + p.id).value = relayBaseFor(p.id, settings.providers[p.id].baseUrl, location);
   }
 }
 function setStatus(text) {
@@ -24,7 +32,7 @@ function currentResolved() {
   const conf = settings.providers[settings.active];
   const apiKey = conf.apiKey.trim();
   const model = conf.model.trim();
-  const baseUrl = conf.baseUrl.trim().replace(/\/+$/, '');
+  const baseUrl = relayBaseFor(settings.active, conf.baseUrl, location);
   if (!apiKey) return {error: '请先填写当前模型服务的 API Key。'};
   if (!model) return {error: '请填写模型名。'};
   if (!isAllowedBaseUrl(baseUrl)) return {error: '服务地址需以 https:// 开头；百炼本地转发可用 http://127.0.0.1:端口。'};
@@ -35,7 +43,7 @@ function currentResolved() {
 $('save-settings').addEventListener('click', () => {
   const check = currentResolved();
   if (check.error) { setStatus(check.error); return; }
-  saveSettings(localStorage, check.settings);
+  saveSettings(localStorage, persistable(check.settings));
   setStatus('已保存，仅存本浏览器。返回工作台即可生成图片。');
 });
 
@@ -83,6 +91,9 @@ $('show-keys').addEventListener('change', () => {
   for (const p of PROVIDERS) $('key-' + p.id).type = $('show-keys').checked ? 'text' : 'password';
 });
 
-fillForm(loadSettings(localStorage));
+const initial = loadSettings(localStorage);
+const wanted = presetFromQuery(location.search);
+if (wanted) initial.active = wanted;
+fillForm(initial);
 setStatus('');
 document.body.dataset.settingsReady = 'ready';
