@@ -63,9 +63,18 @@ export function buildGenerationRequest({baseUrl, model, apiKey, prompt, size}) {
 export function parseGenerationResponse(json) {
   if (json?.error) throw new Error(json.error.message || '模型服务返回错误。');
   const entry = json?.data?.[0];
-  if (entry?.b64_json) return {src: 'data:image/png;base64,' + entry.b64_json, remote: false};
+  if (entry?.b64_json) return {src: 'data:' + b64Mime(entry.b64_json) + ';base64,' + entry.b64_json, remote: false};
   if (typeof entry?.url === 'string' && /^https:\/\//.test(entry.url)) return {src: entry.url, remote: true};
   throw new Error('响应中没有图片，请稍后重试或更换模型。');
+}
+function b64Mime(b64) {
+  let head = '';
+  try { head = atob(String(b64).slice(0, 16)); } catch { return 'image/png'; }
+  const c = i => head.charCodeAt(i);
+  if (c(0) === 0x89 && c(1) === 0x50 && c(2) === 0x4E && c(3) === 0x47) return 'image/png';
+  if (c(0) === 0xFF && c(1) === 0xD8) return 'image/jpeg';
+  if (head.slice(0, 4) === 'RIFF' && head.slice(8, 12) === 'WEBP') return 'image/webp';
+  return 'image/png';
 }
 
 export function testConnectionRequest({baseUrl, apiKey}) {

@@ -390,8 +390,11 @@ function renderGen() {
   $('gen-stale').hidden = !stale;
   const preview = $('gen-image-preview');
   preview.hidden = !hasImage;
-  if (hasImage) preview.src = genState.src;
-  else preview.removeAttribute('src');
+  if (hasImage) {
+    if (preview.getAttribute('src') !== genState.src) preview.src = genState.src;
+  } else {
+    preview.removeAttribute('src');
+  }
   const download = $('gen-download');
   if (hasImage && !stale && ready) {
     download.href = genState.src;
@@ -420,13 +423,14 @@ async function generateImage() {
   const revision = workflow.inputRevision;
   const prompt = workflow.output;
   const size = $('gen-size').value;
-  genState.status = 'loading';
-  genState.slow = false;
-  genState.timedOut = false;
+  const run = genState;
+  run.status = 'loading';
+  run.slow = false;
+  run.timedOut = false;
   const controller = new AbortController();
-  genState.controller = controller;
-  const timeout = setTimeout(() => { genState.timedOut = true; controller.abort('timeout'); }, 120000);
-  const slow = setTimeout(() => { genState.slow = true; renderGen(); }, 20000);
+  run.controller = controller;
+  const timeout = setTimeout(() => { run.timedOut = true; controller.abort('timeout'); }, 120000);
+  const slow = setTimeout(() => { run.slow = true; if (genState === run) renderGen(); }, 20000);
   renderGen();
   try {
     const {url, init} = buildGenerationRequest({baseUrl: resolved.baseUrl, model: resolved.model, apiKey: resolved.apiKey, prompt, size});
@@ -441,22 +445,22 @@ async function generateImage() {
     }
     const parsed = parseGenerationResponse(body);
     if (workflow.inputRevision !== revision) {
-      genState.status = 'error';
-      genState.errorText = '生成期间设置已变化，本次结果未采用。请重新生成。';
+      run.status = 'error';
+      run.errorText = '生成期间设置已变化，本次结果未采用。请重新生成。';
     } else {
-      genState.status = 'ready';
-      genState.src = parsed.src;
-      genState.remote = parsed.remote;
-      genState.revision = revision;
+      run.status = 'ready';
+      run.src = parsed.src;
+      run.remote = parsed.remote;
+      run.revision = revision;
     }
   } catch (err) {
-    genState.status = 'error';
-    genState.errorText = generationErrorText(genState.timedOut ? 'timeout' : err, err?.status || 0, err?.body);
+    run.status = 'error';
+    run.errorText = generationErrorText(run.timedOut ? 'timeout' : err, err?.status || 0, err?.body);
   } finally {
     clearTimeout(timeout);
     clearTimeout(slow);
-    genState.controller = null;
-    renderGen();
+    run.controller = null;
+    if (genState === run) renderGen();
   }
 }
 function focusError(error) {
