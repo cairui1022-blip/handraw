@@ -100,6 +100,11 @@ function b64Mime(b64) {
   return 'image/png';
 }
 
+export function testConnectionSuccessText(provider, status) {
+  if (provider === 'dashscope') return '本地转发可达（' + status + '）。此探测未校验百炼 Key 是否有效，真实有效性会在生成图片时验证。';
+  return '连接成功（' + status + '）。可返回工作台生成图片。';
+}
+
 export function testConnectionRequest({baseUrl, apiKey}) {
   return {
     url: baseUrl.replace(/\/+$/, '') + '/models',

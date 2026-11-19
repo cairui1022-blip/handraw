@@ -1,4 +1,4 @@
-import {PROVIDERS, defaultSettings, loadSettings, saveSettings, clearSettings, testConnectionRequest, explainFetchFailure} from './image-gen.mjs';
+import {PROVIDERS, defaultSettings, loadSettings, saveSettings, clearSettings, testConnectionRequest, testConnectionSuccessText, explainFetchFailure, isAllowedBaseUrl} from './image-gen.mjs';
 
 const $ = id => document.getElementById(id);
 
@@ -27,7 +27,7 @@ function currentResolved() {
   const baseUrl = conf.baseUrl.trim().replace(/\/+$/, '');
   if (!apiKey) return {error: '请先填写当前模型服务的 API Key。'};
   if (!model) return {error: '请填写模型名。'};
-  if (!/^https:\/\//.test(baseUrl)) return {error: '服务地址必须以 https:// 开头。'};
+  if (!isAllowedBaseUrl(baseUrl)) return {error: '服务地址需以 https:// 开头；百炼本地转发可用 http://127.0.0.1:端口。'};
   const preset = PROVIDERS.find(p => p.id === settings.active);
   return {settings, resolved: {id: preset.id, label: preset.label, baseUrl, model, apiKey}};
 }
@@ -55,7 +55,7 @@ $('test-connection').addEventListener('click', async () => {
     let body = null;
     try { body = await response.json(); } catch { body = null; }
     if (run !== testRun) return;
-    if (response.ok) setStatus('连接成功（' + response.status + '）。可返回工作台生成图片。');
+    if (response.ok) setStatus(testConnectionSuccessText(check.resolved.id, response.status));
     else {
       const text = await explainFetchFailure({baseUrl: check.resolved.baseUrl, apiKey: check.resolved.apiKey, status: response.status, body});
       if (run === testRun) setStatus(text);
