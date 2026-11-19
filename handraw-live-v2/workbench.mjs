@@ -1,6 +1,8 @@
 import {compilePrompt} from './prompt-core.mjs';
 import {createWorkflow, transition, validateCurrentContent, effectiveInput, canVisit} from './workflow-state.mjs';
 import {createReferenceLoader} from './reference-loader.mjs';
+import {buildDetailInfo} from './detail-info.mjs';
+import {loadSettings, resolveActive, buildGenerationRequest, parseGenerationResponse, generationErrorText} from './image-gen.mjs';
 
 const $ = id => document.getElementById(id);
 const SPECIAL_LAYOUTS = ['SC-021', 'SC-022', 'SC-023'];
@@ -208,24 +210,6 @@ function renderWorkflow(w) {
   setPanel('color-reference-toggle', 'color-reference', w.panels.colorReference);
   setPanel('help-toggle', 'help-panel', w.panels.help);
   setPanel('use-guide-toggle', 'use-guide', w.panels.useGuide);
-  const quickLayoutsVisible = !layoutLocked;
-  $('quick-layouts').hidden = !quickLayoutsVisible;
-  for (const button of document.querySelectorAll('[data-quick-layout]')) {
-    button.hidden = !quickLayoutsVisible || button.dataset.kind !== form.kind;
-    const selected = form.layout === button.dataset.quickLayout;
-    button.classList.toggle('selected', selected);
-    button.setAttribute('aria-pressed', String(selected));
-  }
-  for (const button of document.querySelectorAll('[data-quick-style]')) {
-    const selected = form.style === button.dataset.quickStyle;
-    button.classList.toggle('selected', selected);
-    button.setAttribute('aria-pressed', String(selected));
-  }
-  for (const button of document.querySelectorAll('[data-quick-color]')) {
-    const selected = (form.colors[0] || 'C-26') === button.dataset.quickColor;
-    button.classList.toggle('selected', selected);
-    button.setAttribute('aria-pressed', String(selected));
-  }
   const expandable = ['layout', 'style', 'color', 'advanced'].filter(panel => panel !== 'layout' || !layoutLocked);
   $('expert-expand').setAttribute('aria-expanded', String(expandable.every(panel => w.panels[panel])));
   $('use-example').disabled = w.catalogStatus !== 'ready';
@@ -236,6 +220,7 @@ function renderWorkflow(w) {
   setAlwaysValue('output', w.output);
   $('copy').disabled = w.resultStatus !== 'ready' || w.copyStatus === 'copying';
   updateExportLinks(w);
+  renderGen();
   $('copying').hidden = w.copyStatus !== 'copying';
   $('copy-ok').hidden = w.copyStatus !== 'success';
   $('copy-manual').hidden = w.copyStatus !== 'manual';
@@ -392,6 +377,88 @@ async function copyCurrent() {
     }
   }
 }
+let genState = {status: 'idle', src: null, remote: false, revision: null, slow: false, errorText: '', controller: null, timedOut: false};
+function renderGen() {
+  const resolved = resolveActive(loadSettings(localStorage));
+  setAlwaysValue('gen-provider-summary', resolved ? `${resolved.label} · ${resolved.model}` : '未配置模型 Key');
+  $('gen-unconfigured').hidden = Boolean(resolved);
+  const ready = workflow.resultStatus === 'ready';
+  const loading = genState.status === 'loading';
+  $('gen-image').disabled = !resolved || !ready || loading;
+  const hasImage = genState.status === 'ready' && Boolean(genState.src);
+  const stale = hasImage && genState.revision !== workflow.inputRevision;
+  $('gen-stale').hidden = !stale;
+  const preview = $('gen-image-preview');
+  preview.hidden = !hasImage;
+  if (hasImage) preview.src = genState.src;
+  else preview.removeAttribute('src');
+  const download = $('gen-download');
+  if (hasImage && !stale && ready) {
+    download.href = genState.src;
+    download.setAttribute('download', '生成图片.png');
+    if (genState.remote) {
+      download.target = '_blank';
+      download.rel = 'noopener';
+    } else {
+      download.removeAttribute('target');
+      download.removeAttribute('rel');
+    }
+    download.setAttribute('aria-disabled', 'false');
+  } else {
+    download.removeAttribute('href');
+    download.setAttribute('aria-disabled', 'true');
+  }
+  $('gen-loading').hidden = !loading;
+  $('gen-cancel').hidden = !loading;
+  $('gen-slow').hidden = !(loading && genState.slow);
+  $('gen-error').hidden = genState.status !== 'error';
+  if (genState.status === 'error') setAlwaysValue('gen-error', genState.errorText || '生成失败，请重试。');
+}
+async function generateImage() {
+  const resolved = resolveActive(loadSettings(localStorage));
+  if (!resolved || workflow.resultStatus !== 'ready' || genState.status === 'loading') return;
+  const revision = workflow.inputRevision;
+  const prompt = workflow.output;
+  const size = $('gen-size').value;
+  genState.status = 'loading';
+  genState.slow = false;
+  genState.timedOut = false;
+  const controller = new AbortController();
+  genState.controller = controller;
+  const timeout = setTimeout(() => { genState.timedOut = true; controller.abort('timeout'); }, 120000);
+  const slow = setTimeout(() => { genState.slow = true; renderGen(); }, 20000);
+  renderGen();
+  try {
+    const {url, init} = buildGenerationRequest({baseUrl: resolved.baseUrl, model: resolved.model, apiKey: resolved.apiKey, prompt, size});
+    const response = await fetch(url, {...init, signal: controller.signal});
+    let body = null;
+    try { body = await response.json(); } catch { body = null; }
+    if (!response.ok) {
+      const httpError = new Error('http');
+      httpError.status = response.status;
+      httpError.body = body;
+      throw httpError;
+    }
+    const parsed = parseGenerationResponse(body);
+    if (workflow.inputRevision !== revision) {
+      genState.status = 'error';
+      genState.errorText = '生成期间设置已变化，本次结果未采用。请重新生成。';
+    } else {
+      genState.status = 'ready';
+      genState.src = parsed.src;
+      genState.remote = parsed.remote;
+      genState.revision = revision;
+    }
+  } catch (err) {
+    genState.status = 'error';
+    genState.errorText = generationErrorText(genState.timedOut ? 'timeout' : err, err?.status || 0, err?.body);
+  } finally {
+    clearTimeout(timeout);
+    clearTimeout(slow);
+    genState.controller = null;
+    renderGen();
+  }
+}
 function focusError(error) {
   if (!error || !error.field) return;
   if (error.field === 'kind') {
@@ -417,6 +484,31 @@ function closeDialog(id) {
   const dialog = $(id);
   if (typeof dialog.close === 'function') dialog.close();
   else dialog.removeAttribute('open');
+}
+let detailTarget = null;
+let detailThumbEl = null;
+function detailItem(slot, id) {
+  if (!catalog) return null;
+  if (slot === 'layout') return catalog.layouts.find(item => item.id === id) || null;
+  if (slot === 'style') return catalog.styles.find(item => item.number === id) || null;
+  return catalog.colors.find(item => item.id === id) || null;
+}
+function openDetail(slot, id, thumbEl) {
+  const item = detailItem(slot, id);
+  if (!item) return;
+  detailTarget = {slot, id};
+  detailThumbEl = thumbEl;
+  const info = buildDetailInfo(slot, item);
+  setAlwaysValue('detail-title', info.title);
+  setAlwaysValue('detail-desc', info.desc);
+  const img = $('detail-image');
+  img.alt = info.title;
+  img.hidden = false;
+  $('detail-loading').hidden = false;
+  $('detail-image-error').hidden = true;
+  $('detail-retry').hidden = true;
+  img.src = 'references/img/' + id + '.webp';
+  openDialog('detail-dialog');
 }
 function dispatch(action) {
   const prev = workflow;
@@ -461,6 +553,8 @@ $('style-search').addEventListener('input', filterStyles);
 $('restore-advanced').addEventListener('click', () => dispatch({type: 'RESET_ADVANCED'}));
 for (const slot of ['layout', 'style', 'color']) $('retry-' + slot).addEventListener('click', () => loader.retry(slot));
 $('generate').addEventListener('click', generateCurrent);
+$('gen-image').addEventListener('click', () => { generateImage(); });
+$('gen-cancel').addEventListener('click', () => { if (genState.controller) genState.controller.abort('cancel'); });
 $('copy').addEventListener('click', () => { copyCurrent(); });
 $('continue-purpose').addEventListener('click', () => dispatch({type: 'CONTINUE'}));
 $('continue-content').addEventListener('click', () => dispatch({type: 'CONTINUE'}));
@@ -471,20 +565,17 @@ $('reset').addEventListener('click', () => openDialog('reset-dialog'));
 $('reset-cancel').addEventListener('click', () => closeDialog('reset-dialog'));
 $('reset-confirm').addEventListener('click', () => {
   closeDialog('reset-dialog');
+  if (genState.controller) genState.controller.abort('cancel');
+  genState = {status: 'idle', src: null, remote: false, revision: null, slow: false, errorText: '', controller: null, timedOut: false};
   dispatch({type: 'RESET'});
 });
-for (const button of document.querySelectorAll('[data-quick-layout]')) button.addEventListener('click', () => { if (!button.hidden) dispatch({type: 'EDIT', field: 'layout', value: button.dataset.quickLayout}); });
-for (const button of document.querySelectorAll('[data-quick-style]')) button.addEventListener('click', () => dispatch({type: 'EDIT', field: 'style', value: button.dataset.quickStyle}));
-for (const button of document.querySelectorAll('[data-quick-color]')) button.addEventListener('click', () => dispatch({type: 'EDIT', field: 'colors', value: [button.dataset.quickColor, $('color-accent-1').value, $('color-accent-2').value]}));
 for (const slot of ['layout', 'style', 'color']) {
   for (const {el, img, id} of thumbEntries[slot]) {
     img.addEventListener('error', () => el.classList.add('is-broken'));
     img.addEventListener('load', () => el.classList.remove('is-broken'));
     el.addEventListener('click', () => {
       if (el.hidden) return;
-      if (slot === 'layout') dispatch({type: 'EDIT', field: 'layout', value: id});
-      else if (slot === 'style') dispatch({type: 'EDIT', field: 'style', value: id});
-      else dispatch({type: 'EDIT', field: 'colors', value: [id, $('color-accent-1').value, $('color-accent-2').value]});
+      openDetail(slot, id, el);
     });
   }
   $(slot + '-batch-prev').addEventListener('click', () => { gridOffset[slot] -= 1; renderThumbGrid(slot, workflow.form); });
@@ -514,6 +605,41 @@ $('example-confirm').addEventListener('click', () => {
   if (topic) dispatch({type: 'EDIT', field: 'topic', value: topic.value});
   if (name) dispatch({type: 'EDIT', field: 'name', value: name.value});
   if (pinyin) dispatch({type: 'EDIT', field: 'pinyin', value: pinyin.value});
+});
+$('detail-select').addEventListener('click', () => {
+  if (!detailTarget) return;
+  const {slot, id} = detailTarget;
+  if (slot === 'layout') dispatch({type: 'EDIT', field: 'layout', value: id});
+  else if (slot === 'style') dispatch({type: 'EDIT', field: 'style', value: id});
+  else dispatch({type: 'EDIT', field: 'colors', value: [id, $('color-accent-1').value, $('color-accent-2').value]});
+  closeDialog('detail-dialog');
+});
+$('detail-close').addEventListener('click', () => closeDialog('detail-dialog'));
+$('detail-dialog').addEventListener('close', () => {
+  detailTarget = null;
+  if (detailThumbEl) detailThumbEl.focus();
+  detailThumbEl = null;
+});
+$('detail-image').addEventListener('load', () => {
+  $('detail-loading').hidden = true;
+  $('detail-image-error').hidden = true;
+  $('detail-retry').hidden = true;
+  $('detail-image').hidden = false;
+});
+$('detail-image').addEventListener('error', () => {
+  $('detail-loading').hidden = true;
+  $('detail-image-error').hidden = false;
+  $('detail-retry').hidden = false;
+  $('detail-image').hidden = true;
+});
+$('detail-retry').addEventListener('click', () => {
+  if (!detailTarget) return;
+  const img = $('detail-image');
+  img.hidden = false;
+  $('detail-loading').hidden = false;
+  $('detail-image-error').hidden = true;
+  $('detail-retry').hidden = true;
+  img.src = 'references/img/' + detailTarget.id + '.webp';
 });
 for (const link of document.querySelectorAll('a[aria-disabled]')) link.addEventListener('click', event => { if (link.getAttribute('aria-disabled') === 'true') event.preventDefault(); });
 

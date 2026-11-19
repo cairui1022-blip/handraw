@@ -7,7 +7,7 @@
 <meta name="best-print-height" content="1120" data-name="meta-height">
 <meta name="device-type" content="pc" data-name="meta-device">
 <meta name="description" content="按用途、内容、视觉、结果逐步生成手绘提示词；亮色工作台，不直接出图。" data-name="meta-description">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'none'" data-name="meta-csp">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; connect-src 'self' blob: https:; object-src 'none'; base-uri 'self'; form-action 'none'" data-name="meta-csp">
 <title data-name="title">手绘提示词工作台 · 渐进式亮色版</title>
 <link rel="stylesheet" href="./workbench.css" data-name="stylesheet">
 <script type="module" src="./workbench.mjs" data-name="module"></script>
@@ -16,7 +16,7 @@
 <noscript data-name="noscript"><p data-name="noscript-text">此工作台需要启用 JavaScript 才能组合提示词。请启用脚本或更换浏览器。</p></noscript>
 <header class="topbar" data-name="header">
   <div class="brand" data-name="brand"><strong data-name="brand-name">HANDRAW</strong><span data-name="brand-sub">手绘提示词工作台</span></div>
-  <p class="capability" data-name="capability">生成文字提示词，不直接出图</p>
+  <p class="capability" data-name="capability">默认生成提示词；配置 Key 后可直接生图</p>
   <nav class="steps" aria-label="创作步骤" data-name="steps">
     <button type="button" class="step" data-stage="purpose" data-name="step-purpose">1 选用途</button>
     <button type="button" class="step" data-stage="content" data-name="step-content">2 填内容</button>
@@ -24,6 +24,7 @@
     <button type="button" class="step" data-stage="result" data-name="step-result">4 得提示词</button>
   </nav>
   <div class="top-actions" data-name="top-actions">
+    <a id="settings-link" class="button secondary" href="./model-settings.html" data-name="settings-link">模型配置</a>
     <button id="help-toggle" type="button" class="button secondary" data-panel="help" aria-expanded="false" data-name="help-toggle">怎么使用</button>
     <a class="button secondary" href="../handraw-full-v3/skill-effects.html" target="_blank" rel="noopener" data-name="effects-link">Skill 效果库（示意，新窗口）</a>
   </div>
@@ -85,28 +86,11 @@
   </section>
   <section id="visual-panel" class="stage" aria-labelledby="visual-title" hidden data-name="visual-panel">
     <h2 id="visual-title" tabindex="-1" data-name="visual-title">选择视觉</h2>
-    <p class="muted" data-name="visual-hint">小图即选项，点一下即选中；默认已选好，可直接生成。翻页浏览全部，或用搜索定位。</p>
+    <p class="muted" data-name="visual-hint">点小图看大图与中文说明，弹窗里选用；默认已选好，可直接生成。翻页浏览全部，或用搜索定位。</p>
     <div class="visual-grid" data-name="visual-grid">
       <div id="layout-card" class="visual-card" data-name="layout-card">
         <label for="summary-layout" data-name="summary-layout-label">当前版式</label>
         <input id="summary-layout" type="text" readonly data-name="summary-layout">
-        <div id="quick-layouts" class="quick-row" data-name="quick-layouts">
-        <button type="button" class="button secondary quick-chip" data-quick-layout="SC-016" data-kind="social-card" aria-pressed="false" data-name="quick-layout-SC-016">SC-016 · 极简大字小图点缀卡</button>
-<button type="button" class="button secondary quick-chip" data-quick-layout="SC-018" data-kind="social-card" aria-pressed="false" data-name="quick-layout-SC-018">SC-018 · 中心主视觉环绕信息卡</button>
-<button type="button" class="button secondary quick-chip" data-quick-layout="SC-019" data-kind="social-card" aria-pressed="false" data-name="quick-layout-SC-019">SC-019 · 中央人物细线标注卡</button>
-<button type="button" class="button secondary quick-chip" data-quick-layout="IG-001" data-kind="infographic" aria-pressed="false" data-name="quick-layout-IG-001">IG-001 · 标题金字塔图标信息图</button>
-<button type="button" class="button secondary quick-chip" data-quick-layout="IG-002" data-kind="infographic" aria-pressed="false" data-name="quick-layout-IG-002">IG-002 · 中心主图标注信息图</button>
-<button type="button" class="button secondary quick-chip" data-quick-layout="IG-003" data-kind="infographic" aria-pressed="false" data-name="quick-layout-IG-003">IG-003 · 多行左文右图信息图</button>
-<button type="button" class="button secondary quick-chip" data-quick-layout="SB-001" data-kind="comic-storyboard" aria-pressed="false" data-name="quick-layout-SB-001">SB-001 · 规则网格</button>
-<button type="button" class="button secondary quick-chip" data-quick-layout="SB-002" data-kind="comic-storyboard" aria-pressed="false" data-name="quick-layout-SB-002">SB-002 · 四格起承转合</button>
-<button type="button" class="button secondary quick-chip" data-quick-layout="SB-003" data-kind="comic-storyboard" aria-pressed="false" data-name="quick-layout-SB-003">SB-003 · 大格 + 小格</button>
-<button type="button" class="button secondary quick-chip" data-quick-layout="IP-001" data-kind="ip-character" aria-pressed="false" data-name="quick-layout-IP-001">IP-001 · IP定位卡</button>
-<button type="button" class="button secondary quick-chip" data-quick-layout="IP-002" data-kind="ip-character" aria-pressed="false" data-name="quick-layout-IP-002">IP-002 · 角色形象三视图基准图</button>
-<button type="button" class="button secondary quick-chip" data-quick-layout="IP-003" data-kind="ip-character" aria-pressed="false" data-name="quick-layout-IP-003">IP-003 · 16宫格角色微信表情包</button>
-<button type="button" class="button secondary quick-chip" data-quick-layout="EC-001" data-kind="ecommerce" aria-pressed="false" data-name="quick-layout-EC-001">EC-001 · 单品主图</button>
-<button type="button" class="button secondary quick-chip" data-quick-layout="EC-002" data-kind="ecommerce" aria-pressed="false" data-name="quick-layout-EC-002">EC-002 · 多角度展示图</button>
-<button type="button" class="button secondary quick-chip" data-quick-layout="EC-003" data-kind="ecommerce" aria-pressed="false" data-name="quick-layout-EC-003">EC-003 · 细节特写图</button>
-        </div>
         <div id="layout-thumb-grid" class="thumb-grid" role="group" aria-label="版式小图预览" data-name="layout-thumb-grid">
         <button type="button" class="thumb" data-layout-thumb="SB-001" data-category="comic-storyboard" aria-pressed="false" aria-label="SB-001 · 规则网格" hidden data-name="layout-thumb-SB-001"><img alt="" loading="lazy" decoding="async" data-name="layout-thumb-img-SB-001"><span class="thumb-id" data-name="layout-thumb-id-SB-001">SB-001</span></button>
 <button type="button" class="thumb" data-layout-thumb="SB-002" data-category="comic-storyboard" aria-pressed="false" aria-label="SB-002 · 四格起承转合" hidden data-name="layout-thumb-SB-002"><img alt="" loading="lazy" decoding="async" data-name="layout-thumb-img-SB-002"><span class="thumb-id" data-name="layout-thumb-id-SB-002">SB-002</span></button>
@@ -462,11 +446,6 @@
       <div class="visual-card" data-name="style-card">
         <label for="summary-style" data-name="summary-style-label">当前画风</label>
         <input id="summary-style" type="text" readonly data-name="summary-style">
-        <div class="quick-row" data-name="quick-styles">
-        <button type="button" class="button secondary quick-chip" data-quick-style="FA-003" aria-pressed="false" data-name="quick-style-FA-003">FA-003 · Jean-Jacques Sempé</button>
-<button type="button" class="button secondary quick-chip" data-quick-style="FA-001" aria-pressed="false" data-name="quick-style-FA-001">FA-001 · Gemma Correll</button>
-<button type="button" class="button secondary quick-chip" data-quick-style="FB-001" aria-pressed="false" data-name="quick-style-FB-001">FB-001 · Quentin Blake</button>
-        </div>
         <input id="style-search" type="search" placeholder="搜索作者、画风名称或编号" aria-label="搜索画风" data-name="style-search">
         <div id="style-thumb-grid" class="thumb-grid" role="group" aria-label="画风小图预览" data-name="style-thumb-grid">
         <button type="button" class="thumb" data-style-thumb="FA-001" aria-pressed="false" aria-label="FA-001 · Gemma Correll" hidden data-name="style-thumb-FA-001"><img alt="" loading="lazy" decoding="async" data-name="style-thumb-img-FA-001"><span class="thumb-id" data-name="style-thumb-id-FA-001">FA-001</span></button>
@@ -1224,11 +1203,6 @@
       <div class="visual-card" data-name="color-card">
         <label for="summary-color" data-name="summary-color-label">当前主色</label>
         <input id="summary-color" type="text" readonly data-name="summary-color">
-        <div class="quick-row" data-name="quick-colors">
-        <button type="button" class="button secondary quick-chip" data-quick-color="C-26" aria-pressed="false" data-name="quick-color-C-26">C-26 · 柿子橙</button>
-<button type="button" class="button secondary quick-chip" data-quick-color="C-01" aria-pressed="false" data-name="quick-color-C-01">C-01 · 克莱因蓝</button>
-<button type="button" class="button secondary quick-chip" data-quick-color="C-30" aria-pressed="false" data-name="quick-color-C-30">C-30 · 象牙白</button>
-        </div>
         <div id="color-thumb-grid" class="thumb-grid" role="group" aria-label="配色小图预览" data-name="color-thumb-grid">
         <button type="button" class="thumb" data-color-thumb="C-01" aria-pressed="false" aria-label="C-01 · 克莱因蓝" hidden data-name="color-thumb-C-01"><img alt="" loading="lazy" decoding="async" data-name="color-thumb-img-C-01"><span class="thumb-id" data-name="color-thumb-id-C-01">C-01</span></button>
 <button type="button" class="thumb" data-color-thumb="C-02" aria-pressed="false" aria-label="C-02 · 马若雷勒蓝" hidden data-name="color-thumb-C-02"><img alt="" loading="lazy" decoding="async" data-name="color-thumb-img-C-02"><span class="thumb-id" data-name="color-thumb-id-C-02">C-02</span></button>
@@ -1435,11 +1409,31 @@
       <p id="copying" class="muted" hidden data-name="copying">正在复制…</p>
       <p id="copy-ok" class="success" hidden data-name="copy-ok">已复制完整提示词。</p>
       <p id="copy-manual" class="banner" hidden data-name="copy-manual">浏览器未允许自动复制。已选中文字，请按 Ctrl/Cmd+C 或长按手动复制。</p>
+      <div class="gen-section" data-name="gen-section">
+        <h3 data-name="gen-title">直接生成图片（可选）</h3>
+        <label for="gen-provider-summary" data-name="gen-provider-label">当前模型服务</label>
+        <input id="gen-provider-summary" type="text" readonly data-name="gen-provider-summary">
+        <p id="gen-unconfigured" class="muted" hidden data-name="gen-unconfigured">未配置模型 Key。配置后可在本站直接生图；也可复制提示词去自己的工具。</p>
+        <div class="result-actions" data-name="gen-actions">
+          <a id="gen-settings-link" class="button secondary" href="./model-settings.html" data-name="gen-settings-link">配置模型 Key</a>
+          <label for="gen-size" class="inline-label" data-name="gen-size-label">尺寸</label>
+          <select id="gen-size" data-name="gen-size"><option value="" data-name="gen-size-default">模型默认</option><option value="1024x1024" data-name="gen-size-square">方形 1024×1024</option><option value="1024x1536" data-name="gen-size-vertical">竖版 1024×1536</option><option value="1536x1024" data-name="gen-size-horizontal">横版 1536×1024</option></select>
+          <button id="gen-image" type="button" class="button primary" disabled data-name="gen-image">生成图片</button>
+          <button id="gen-cancel" type="button" class="button secondary" hidden data-name="gen-cancel">取消生成</button>
+          <a id="gen-download" class="button secondary" aria-disabled="true" data-name="gen-download">下载图片</a>
+        </div>
+        <p class="muted" data-name="gen-size-note">尺寸支持因模型而异，报错时改回模型默认。</p>
+        <p id="gen-loading" class="muted" hidden data-name="gen-loading">正在生成图片，通常需要 10–60 秒…</p>
+        <p id="gen-slow" class="muted" hidden data-name="gen-slow">仍在生成：部分模型超过 1 分钟，可继续等待或取消。</p>
+        <input id="gen-error" type="text" readonly class="error-input" hidden data-name="gen-error">
+        <p id="gen-stale" class="banner" hidden data-name="gen-stale">设置已修改，下方图片为上一次生成；重新生成提示词与图片后可下载。</p>
+        <img id="gen-image-preview" class="gen-img" alt="本次生成的图片" hidden data-name="gen-image-preview">
+      </div>
     </div>
     <div id="use-guide" class="guide" hidden data-name="use-guide">
       <h3 data-name="guide-title">去自己的 AI 工具生图</h3>
       <ol data-name="guide-steps">
-        <li data-name="guide-step1">打开你有权限使用、支持图片生成的工具，粘贴完整提示词。本站只生成文字指令。</li>
+        <li data-name="guide-step1">打开你有权限使用、支持图片生成的工具，粘贴完整提示词。不配置 Key 时，本站只生成文字指令。</li>
         <li data-name="guide-step2">工具支持参考图时，上传画风参考；需要约束构图再上传版式参考；配色参考可选。照片双拼还需上传自己的照片。说明只参考画风/构图，不照搬参考里的主题、文字或人物。</li>
         <li data-name="guide-step3">在该工具生成图片，检查中文、比例、人物和商品事实；效果不合适时回到本站修改设置并重新生成。能力、费用、额度与授权由该工具决定。</li>
       </ol>
@@ -1454,12 +1448,12 @@
   </section>
   <aside id="help-panel" class="help" hidden data-name="help-panel">
     <h3 data-name="help-title">怎么使用</h3>
-    <p data-name="help-text">选择用途 → 填写内容 → 使用默认视觉或展开调整 → 生成提示词 → 复制或下载后去自己的生图工具。本站不直接生成图片，不自动保存输入；刷新或关闭可能丢失内容。</p>
+    <p data-name="help-text">选择用途 → 填写内容 → 使用默认视觉或展开调整 → 生成提示词 → 复制或下载后去自己的生图工具；或在模型配置填入 Key 后直接生成图片。Key 仅存本浏览器，不上传；不自动保存输入，刷新或关闭可能丢失内容。</p>
     <button id="help-close" type="button" class="button secondary" data-panel="help" data-name="help-close">关闭帮助</button>
   </aside>
 </main>
 <footer class="footer" data-name="footer">
-  <p data-name="footer-boundary">固定上游快照 · 170 图型 / 370 画风 / 36 配色 · 参考图非本次成图 · 不新增 AI 调用或账号。</p>
+  <p data-name="footer-boundary">固定上游快照 · 170 图型 / 370 画风 / 36 配色 · 参考图非本次成图 · 模型 Key 仅存本浏览器。</p>
   <div class="footer-actions" data-name="footer-actions"><a class="button secondary" href="../handraw-full-v3/skill-effects.html" target="_blank" rel="noopener" data-name="effects-link-footer">Skill 效果库（示意）</a><button id="reset" type="button" class="button secondary" data-name="reset">重新开始</button></div>
 </footer>
 <dialog id="reset-dialog" data-name="reset-dialog">
@@ -1479,6 +1473,15 @@
 <div class="example-block" data-example="ecommerce" hidden data-name="example-ecommerce"><h4 data-name="example-title-ecommerce">电商商品图 · 演示示例</h4><label for="example-topic-ecommerce" data-name="example-topic-label-ecommerce">示例主题</label><textarea id="example-topic-ecommerce" rows="3" readonly data-example-topic data-name="example-topic-ecommerce">真实商品：白色陶瓷马克杯，350ml，哑光釉面</textarea></div>
 <div class="example-block" data-example="pure-image" hidden data-name="example-pure-image"><h4 data-name="example-title-pure-image">纯画面 · 演示示例</h4><label for="example-topic-pure-image" data-name="example-topic-label-pure-image">示例主题</label><textarea id="example-topic-pure-image" rows="3" readonly data-example-topic data-name="example-topic-pure-image">清晨海边的薄雾与灯塔</textarea></div>
   <div class="dialog-actions" data-name="example-dialog-actions"><button id="example-confirm" type="button" class="button primary" data-name="example-confirm">确认填入</button><button id="example-cancel" type="button" class="button secondary" data-name="example-cancel">取消</button></div>
+</dialog>
+<dialog id="detail-dialog" aria-label="查看大图与中文说明" data-name="detail-dialog">
+  <input id="detail-title" type="text" readonly data-name="detail-title">
+  <img id="detail-image" class="detail-img" alt="" hidden data-name="detail-image">
+  <p id="detail-loading" class="muted" hidden data-name="detail-loading">大图加载中…</p>
+  <p id="detail-image-error" class="error" hidden data-name="detail-image-error">大图未加载成功。</p>
+  <button id="detail-retry" type="button" class="button secondary" hidden data-name="detail-retry">重试</button>
+  <textarea id="detail-desc" rows="8" readonly data-name="detail-desc"></textarea>
+  <div class="dialog-actions" data-name="detail-dialog-actions"><button id="detail-select" type="button" class="button primary" data-name="detail-select">选用此项</button><button id="detail-close" type="button" class="button secondary" data-name="detail-close">关闭</button></div>
 </dialog>
 </body>
 </html>

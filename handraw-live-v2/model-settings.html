@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="zh-CN" data-name="html">
+<head data-name="head">
+<meta charset="utf-8" data-name="meta-charset">
+<meta name="viewport" content="width=device-width,initial-scale=1" data-name="meta-viewport">
+<meta name="best-print-width" content="1440" data-name="meta-width">
+<meta name="best-print-height" content="900" data-name="meta-height">
+<meta name="device-type" content="pc" data-name="meta-device">
+<meta name="description" content="配置生图模型 API Key，仅存本浏览器；配置后工作台可直接生成图片。" data-name="meta-description">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https:; object-src 'none'; base-uri 'self'; form-action 'none'" data-name="meta-csp">
+<title data-name="title">模型配置 · Handraw</title>
+<link rel="stylesheet" href="./workbench.css" data-name="stylesheet">
+<script type="module" src="./model-settings.mjs" data-name="module"></script>
+</head>
+<body data-name="body">
+<header class="topbar" data-name="header">
+  <div class="brand" data-name="brand"><strong data-name="brand-name">HANDRAW</strong><span data-name="brand-sub">模型配置</span></div>
+  <div class="top-actions" data-name="top-actions"><a class="button secondary" href="./start-creating.html" data-name="back-link">返回工作台</a></div>
+</header>
+<main class="wrap" data-name="main">
+  <section class="stage" data-name="settings-stage">
+    <h2 data-name="settings-title">模型配置</h2>
+    <p class="muted" data-name="settings-security">Key 仅保存在本浏览器 localStorage，不上传到任何服务器；公共电脑请勿保存。清除浏览器数据会同时清除 Key。</p>
+    <label data-name="active-label">当前使用的模型服务</label>
+    <div class="form-grid" role="radiogroup" aria-label="当前使用的模型服务" data-name="active-grid">
+<label class="form-card" data-name="active-card-openai"><input type="radio" name="active-provider" value="openai" checked data-name="active-openai"><span data-name="active-title-openai">OpenAI · GPT Image / DALL·E</span></label>
+<label class="form-card" data-name="active-card-zhipu"><input type="radio" name="active-provider" value="zhipu" data-name="active-zhipu"><span data-name="active-title-zhipu">智谱 · CogView</span></label>
+<label class="form-card" data-name="active-card-siliconflow"><input type="radio" name="active-provider" value="siliconflow" data-name="active-siliconflow"><span data-name="active-title-siliconflow">SiliconFlow · FLUX / Qwen-Image</span></label>
+<label class="form-card" data-name="active-card-custom"><input type="radio" name="active-provider" value="custom" data-name="active-custom"><span data-name="active-title-custom">自定义 · OpenAI 兼容地址</span></label>
+    </div>
+    <div class="visual-grid" data-name="provider-grid">
+      <div class="visual-card" data-name="provider-openai">
+        <h3 data-name="provider-title-openai">OpenAI · GPT Image / DALL·E</h3>
+        <label for="key-openai" data-name="key-label-openai">API Key</label>
+        <input id="key-openai" type="password" autocomplete="off" placeholder="仅存本浏览器" data-name="key-openai">
+        <label for="model-openai" data-name="model-label-openai">模型名</label>
+        <input id="model-openai" type="text" value="gpt-image-1" placeholder="" data-name="model-openai">
+        <label for="baseurl-openai" data-name="baseurl-label-openai">服务地址（https，OpenAI 兼容）</label>
+        <input id="baseurl-openai" type="text" value="https://api.openai.com/v1" placeholder="" data-name="baseurl-openai">
+      </div>
+      <div class="visual-card" data-name="provider-zhipu">
+        <h3 data-name="provider-title-zhipu">智谱 · CogView</h3>
+        <label for="key-zhipu" data-name="key-label-zhipu">API Key</label>
+        <input id="key-zhipu" type="password" autocomplete="off" placeholder="仅存本浏览器" data-name="key-zhipu">
+        <label for="model-zhipu" data-name="model-label-zhipu">模型名</label>
+        <input id="model-zhipu" type="text" value="cogview-4" placeholder="" data-name="model-zhipu">
+        <label for="baseurl-zhipu" data-name="baseurl-label-zhipu">服务地址（https，OpenAI 兼容）</label>
+        <input id="baseurl-zhipu" type="text" value="https://open.bigmodel.cn/api/paas/v4" placeholder="" data-name="baseurl-zhipu">
+      </div>
+      <div class="visual-card" data-name="provider-siliconflow">
+        <h3 data-name="provider-title-siliconflow">SiliconFlow · FLUX / Qwen-Image</h3>
+        <label for="key-siliconflow" data-name="key-label-siliconflow">API Key</label>
+        <input id="key-siliconflow" type="password" autocomplete="off" placeholder="仅存本浏览器" data-name="key-siliconflow">
+        <label for="model-siliconflow" data-name="model-label-siliconflow">模型名</label>
+        <input id="model-siliconflow" type="text" value="black-forest-labs/FLUX.1-schnell" placeholder="" data-name="model-siliconflow">
+        <label for="baseurl-siliconflow" data-name="baseurl-label-siliconflow">服务地址（https，OpenAI 兼容）</label>
+        <input id="baseurl-siliconflow" type="text" value="https://api.siliconflow.cn/v1" placeholder="" data-name="baseurl-siliconflow">
+      </div>
+      <div class="visual-card" data-name="provider-custom">
+        <h3 data-name="provider-title-custom">自定义 · OpenAI 兼容地址</h3>
+        <label for="key-custom" data-name="key-label-custom">API Key</label>
+        <input id="key-custom" type="password" autocomplete="off" placeholder="仅存本浏览器" data-name="key-custom">
+        <label for="model-custom" data-name="model-label-custom">模型名</label>
+        <input id="model-custom" type="text" value="" placeholder="例如 gpt-image-1 / cogview-4" data-name="model-custom">
+        <label for="baseurl-custom" data-name="baseurl-label-custom">服务地址（https，OpenAI 兼容）</label>
+        <input id="baseurl-custom" type="text" value="" placeholder="https://你的兼容地址/v1" data-name="baseurl-custom">
+      </div>
+    </div>
+    <div class="stage-actions" data-name="settings-actions">
+      <button id="save-settings" type="button" class="button primary" data-name="save-settings">保存配置</button>
+      <button id="test-connection" type="button" class="button secondary" data-name="test-connection">测试当前连接</button>
+      <button id="clear-settings" type="button" class="button secondary" data-name="clear-settings">清除本浏览器全部配置</button>
+    </div>
+    <label for="settings-status" data-name="status-label">状态</label>
+    <input id="settings-status" type="text" readonly data-name="settings-status">
+    <label data-name="show-keys-label"><input id="show-keys" type="checkbox" data-name="show-keys"> 显示 Key</label>
+    <p class="muted" data-name="settings-cors">生图由浏览器直连服务地址，需对方允许跨域（CORS）。连接失败时可改用支持浏览器调用的兼容地址；协议为 OpenAI 兼容 /images/generations。费用与额度由模型服务方决定。</p>
+  </section>
+</main>
+<footer class="footer" data-name="footer">
+  <p data-name="footer-note">配置完成后返回工作台，在「得提示词」步点击生成图片。</p>
+</footer>
+</body>
+</html>
