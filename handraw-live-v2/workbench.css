@@ -45,12 +45,13 @@ body { margin: 0; background: var(--bg); color: var(--text); font-family: ui-san
 .kind-card small, .form-card small { color: var(--muted); font-size: 14px; }
 input[type="radio"] { width: 20px; height: 20px; accent-color: var(--primary); }
 label { display: block; margin: 12px 0 4px; font-size: 14px; color: var(--text); }
-textarea, input[type="text"], input[type="search"], select { width: 100%; padding: 10px; border: 1px solid var(--control); border-radius: 8px; background: var(--panel); color: var(--text); font-size: 16px; font-family: inherit; }
+textarea, input[type="text"], input[type="search"], input[type="password"], select { width: 100%; padding: 10px; border: 1px solid var(--control); border-radius: 8px; background: var(--panel); color: var(--text); font-size: 16px; font-family: inherit; }
 textarea { min-height: 120px; resize: vertical; }
 input[readonly], textarea[readonly] { background: var(--bg); }
 .stage-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
 .visual-grid { display: grid; grid-template-columns: 1fr; gap: 16px; margin: 12px 0; }
 .visual-card { border: 1px solid var(--line); border-radius: 10px; padding: 12px; }
+.provider-grid { display: grid; grid-template-columns: 1fr; gap: 16px; margin: 12px 0; }
 .thumb-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin: 8px 0; }
 .thumb { display: flex; flex-direction: column; gap: 2px; min-width: 44px; min-height: 44px; padding: 4px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); cursor: pointer; font: inherit; }
 .thumb img { display: block; width: 100%; aspect-ratio: 1 / 1; object-fit: contain; background: var(--bg); border-radius: 4px; }

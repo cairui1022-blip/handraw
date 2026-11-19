@@ -27,6 +27,10 @@ function fillForm(settings) {
 function setStatus(text) {
   $('settings-status').value = text;
 }
+function syncProviderCards() {
+  const active = document.querySelector('input[name="active-provider"]:checked')?.value;
+  for (const p of PROVIDERS) $('provider-' + p.id).hidden = p.id !== active;
+}
 function currentResolved() {
   const settings = readForm();
   const conf = settings.providers[settings.active];
@@ -82,6 +86,7 @@ $('clear-settings').addEventListener('click', () => {
   $('test-connection').disabled = false;
   clearSettings(localStorage);
   fillForm(defaultSettings());
+  syncProviderCards();
   $('show-keys').checked = false;
   for (const p of PROVIDERS) $('key-' + p.id).type = 'password';
   setStatus('已清除本浏览器全部配置。');
@@ -95,5 +100,7 @@ const initial = loadSettings(localStorage);
 const wanted = presetFromQuery(location.search);
 if (wanted) initial.active = wanted;
 fillForm(initial);
+syncProviderCards();
+for (const radio of document.querySelectorAll('input[name="active-provider"]')) radio.addEventListener('change', syncProviderCards);
 setStatus('');
 document.body.dataset.settingsReady = 'ready';

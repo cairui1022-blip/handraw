@@ -30,8 +30,8 @@
 <label class="form-card" data-name="active-card-dashscope"><input type="radio" name="active-provider" value="dashscope" data-name="active-dashscope"><span data-name="active-title-dashscope">百炼 · Qwen-Image / Wanx（本地转发）</span></label>
 <label class="form-card" data-name="active-card-custom"><input type="radio" name="active-provider" value="custom" data-name="active-custom"><span data-name="active-title-custom">自定义 · OpenAI 兼容地址</span></label>
     </div>
-    <div class="visual-grid" data-name="provider-grid">
-      <div class="visual-card" data-name="provider-openai">
+    <div class="provider-grid" data-name="provider-grid">
+      <div class="visual-card" id="provider-openai" data-name="provider-openai">
         <h3 data-name="provider-title-openai">OpenAI · GPT Image / DALL·E</h3>
         <label for="key-openai" data-name="key-label-openai">API Key</label>
         <input id="key-openai" type="password" autocomplete="off" placeholder="仅存本浏览器" data-name="key-openai">
@@ -41,7 +41,7 @@
         <input id="baseurl-openai" type="text" value="https://api.openai.com/v1" placeholder="" data-name="baseurl-openai">
         <p class="muted" id="provider-hint-openai" data-name="provider-hint-openai">gpt-image-1 需组织验证（通过后约 15 分钟生效）；未验证可填 dall-e-3。</p>
       </div>
-      <div class="visual-card" data-name="provider-tyai">
+      <div class="visual-card" id="provider-tyai" data-name="provider-tyai">
         <h3 data-name="provider-title-tyai">TY AI 中转 · GPT Image 2/2.5/2.6</h3>
         <label for="key-tyai" data-name="key-label-tyai">API Key</label>
         <input id="key-tyai" type="password" autocomplete="off" placeholder="仅存本浏览器" data-name="key-tyai">
@@ -51,7 +51,7 @@
         <input id="baseurl-tyai" type="text" value="https://tyaiapi.com/v1" placeholder="" data-name="baseurl-tyai">
         <p class="muted" id="provider-hint-tyai" data-name="provider-hint-tyai">模型如 gpt-image-2-1k（快）、gpt-image-2.5-sunburst-4k-max（4K 五档质量）、gpt-image-2-4k-high（自动 quality=high）；grok-imagine-image-2.0 不传质量。</p>
       </div>
-      <div class="visual-card" data-name="provider-zhipu">
+      <div class="visual-card" id="provider-zhipu" data-name="provider-zhipu">
         <h3 data-name="provider-title-zhipu">智谱 · CogView</h3>
         <label for="key-zhipu" data-name="key-label-zhipu">API Key</label>
         <input id="key-zhipu" type="password" autocomplete="off" placeholder="仅存本浏览器" data-name="key-zhipu">
@@ -61,7 +61,7 @@
         <input id="baseurl-zhipu" type="text" value="https://open.bigmodel.cn/api/paas/v4" placeholder="" data-name="baseurl-zhipu">
         <p class="muted" id="provider-hint-zhipu" data-name="provider-hint-zhipu">如 cogview-4。</p>
       </div>
-      <div class="visual-card" data-name="provider-siliconflow">
+      <div class="visual-card" id="provider-siliconflow" data-name="provider-siliconflow">
         <h3 data-name="provider-title-siliconflow">SiliconFlow · FLUX / Qwen-Image</h3>
         <label for="key-siliconflow" data-name="key-label-siliconflow">API Key</label>
         <input id="key-siliconflow" type="password" autocomplete="off" placeholder="仅存本浏览器" data-name="key-siliconflow">
@@ -71,7 +71,7 @@
         <input id="baseurl-siliconflow" type="text" value="https://api.siliconflow.cn/v1" placeholder="" data-name="baseurl-siliconflow">
         <p class="muted" id="provider-hint-siliconflow" data-name="provider-hint-siliconflow">Qwen 填 Qwen/Qwen-Image；FLUX 填 black-forest-labs/FLUX.1-schnell。返回链接 1 小时有效。</p>
       </div>
-      <div class="visual-card" data-name="provider-dashscope">
+      <div class="visual-card" id="provider-dashscope" data-name="provider-dashscope">
         <h3 data-name="provider-title-dashscope">百炼 · Qwen-Image / Wanx（本地转发）</h3>
         <label for="key-dashscope" data-name="key-label-dashscope">API Key</label>
         <input id="key-dashscope" type="password" autocomplete="off" placeholder="仅存本浏览器" data-name="key-dashscope">
@@ -81,7 +81,7 @@
         <input id="baseurl-dashscope" type="text" value="http://127.0.0.1:8787" placeholder="http://127.0.0.1:8787" data-name="baseurl-dashscope">
         <p class="muted" id="provider-hint-dashscope" data-name="provider-hint-dashscope">阿里云百炼原生接口（非 OpenAI 兼容），需在本机运行 node dashscope-relay-server.mjs 后使用；qwen-image-2.0 系列同步出图（推荐），qwen-image / wanx 走异步任务自动轮询。模型名示例：qwen-image-2.0-pro、qwen-image、wanx2.1-t2i-turbo。图片链接 24 小时有效。</p>
       </div>
-      <div class="visual-card" data-name="provider-custom">
+      <div class="visual-card" id="provider-custom" data-name="provider-custom">
         <h3 data-name="provider-title-custom">自定义 · OpenAI 兼容地址</h3>
         <label for="key-custom" data-name="key-label-custom">API Key</label>
         <input id="key-custom" type="password" autocomplete="off" placeholder="仅存本浏览器" data-name="key-custom">
