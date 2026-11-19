@@ -19,9 +19,9 @@
 
 - **TY AI 中转（GPT Image 2/2.5/2.6）**：配置页选「TY AI 中转」，服务地址默认 `https://tyaiapi.com/v1`，填 Key 即可；模型名按中转站文档填，例如 `gpt-image-2-1k`（快）、`gpt-image-2.5-sunburst-4k-max`（4K，可选 low/medium/high/xhigh/max 五档质量）、`gpt-image-2-4k-high`（自动 quality=high）。尺寸可选 1K/2K/4K（方形、竖版、横版）；4K 方图为 2880×2880。中转高清常需 1–5 分钟，前端超时已放宽到 10 分钟；超时后请勿连续重试，避免重复扣费。返回的是远程链接（部分仅 1 小时有效），生成后请尽快点「下载图片」保存。
 - **Qwen（阿里云百炼）**：百炼生图使用原生接口，**不支持 OpenAI 兼容模式**，因此不能像 OpenAI 那样由浏览器直连；本站提供一个本地转发服务（`dashscope-relay.mjs` + `dashscope-relay-server.mjs`），由它代你调用百炼并自动处理同步/异步两种协议。使用步骤：
-  1. 在本目录执行 `node dashscope-relay-server.mjs`（默认 `http://127.0.0.1:8787`）。若提示「端口已被占用」，换一个端口再启动，例如 `node dashscope-relay-server.mjs --port 8900`，并把配置页的服务地址改成对应端口。启动成功后终端会打印 `工作台已启动：http://127.0.0.1:端口/start-creating.html`。
-  2. 浏览器打开它打印的地址 `http://127.0.0.1:8787/start-creating.html`（**不要用 GitHub Pages 打开**：https 页面直连本机 http 会被浏览器按混合内容拦截）。
-  3. 配置页选「百炼 · Qwen-Image / Wanx（本地转发）」，填百炼 API Key，模型名填 `qwen-image-2.0-pro`（推荐，同步出图）或 `qwen-image`、`wanx2.1-t2i-turbo`（异步任务，转发服务自动轮询），保存后回结果步生图。
+  1. 在本目录执行 `node dashscope-relay-server.mjs`。它会自动打开浏览器并打印 `工作台已启动：http://127.0.0.1:端口/start-creating.html`。若 8787 被占用会**自动顺延到 8788/8789…**并在终端说明实际端口，无需手动改端口；不想自动开浏览器可加 `--no-open`。
+  2. 用终端打印的地址打开工作台（**不要用 GitHub Pages 打开**：https 页面直连本机 http 会被浏览器按混合内容拦截）。页面底部会出现「配置百炼 Qwen」按钮，点一下即进入配置页并**已预选百炼**，Key 一栏为空——只需粘贴百炼 API Key 即可，服务地址无需改动（会自动跟随当前实际端口）。
+  3. 模型名默认 `qwen-image-2.0-pro`（推荐，同步出图），也可填 `qwen-image`、`wanx2.1-t2i-turbo`（异步任务，转发服务自动轮询）；保存后回结果步生图。
   4. `qwen-image-2.0` 系列一次请求即返回；`qwen-image`／`wanx` 系列先建任务再轮询，通常 1–2 分钟，前端 10 分钟超时。百炼返回的图片链接 24 小时有效，请及时下载。
 - **「测试当前连接」在百炼下的含义**：它只探测本地转发服务是否可达，**不校验百炼 Key**（避免额外产生一次计费调用）；Key 是否有效会在第一次生成图片时以百炼原文报错呈现。
 - 若只需文字提示词，不配置任何 Key 也完全可用。
