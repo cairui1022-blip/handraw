@@ -2,7 +2,7 @@ import {compilePrompt} from './prompt-core.mjs';
 import {createWorkflow, transition, validateCurrentContent, effectiveInput, canVisit} from './workflow-state.mjs';
 import {createReferenceLoader} from './reference-loader.mjs';
 import {buildDetailInfo} from './detail-info.mjs';
-import {loadSettings, saveSettings, resolveActive, buildGenerationRequest, parseGenerationResponse, explainFetchFailureDetailed, dallE3FallbackSettings} from './image-gen.mjs';
+import {loadSettings, saveSettings, resolveActive, buildGenerationRequest, parseGenerationResponse, explainFetchFailureDetailed, dallE3FallbackSettings, GENERATION_TIMEOUT_MS, autoQuality} from './image-gen.mjs';
 
 const $ = id => document.getElementById(id);
 const SPECIAL_LAYOUTS = ['SC-021', 'SC-022', 'SC-023'];
@@ -414,6 +414,10 @@ function renderGen() {
   $('gen-loading').hidden = !loading;
   $('gen-cancel').hidden = !loading;
   $('gen-slow').hidden = !(loading && genState.slow);
+  const hasQualityChoice = Boolean(resolved) && /4k-max$/i.test(resolved.model);
+  $('gen-quality').hidden = !hasQualityChoice;
+  $('gen-quality-label').hidden = !hasQualityChoice;
+  $('gen-remote-note').hidden = !(hasImage && genState.remote);
   $('gen-error').hidden = genState.status !== 'error';
   if (genState.status === 'error') setAlwaysValue('gen-error', genState.errorText || '生成失败，请重试。');
   const offerFallback = genState.status === 'error' && genState.errorKind === 'key-ok' && Boolean(resolved) && resolved.id === 'openai' && resolved.model.startsWith('gpt-image');
@@ -434,11 +438,12 @@ async function generateImage() {
   const startedAt = Date.now();
   const controller = new AbortController();
   run.controller = controller;
-  const timeout = setTimeout(() => { run.timedOut = true; controller.abort('timeout'); }, 120000);
+  const timeout = setTimeout(() => { run.timedOut = true; controller.abort('timeout'); }, GENERATION_TIMEOUT_MS);
   const slow = setTimeout(() => { run.slow = true; if (genState === run) renderGen(); }, 20000);
   renderGen();
   try {
-    const {url, init} = buildGenerationRequest({baseUrl: resolved.baseUrl, model: resolved.model, apiKey: resolved.apiKey, prompt, size});
+    const quality = (/4k-max$/i.test(resolved.model) ? $('gen-quality').value : '') || autoQuality(resolved.model);
+    const {url, init} = buildGenerationRequest({baseUrl: resolved.baseUrl, model: resolved.model, apiKey: resolved.apiKey, prompt, size, quality, provider: resolved.id});
     const response = await fetch(url, {...init, signal: controller.signal});
     let body = null;
     try { body = await response.json(); } catch { body = null; }

@@ -7,7 +7,7 @@
 <meta name="best-print-height" content="1120" data-name="meta-height">
 <meta name="device-type" content="pc" data-name="meta-device">
 <meta name="description" content="按用途、内容、视觉、结果逐步生成手绘提示词；亮色工作台，不直接出图。" data-name="meta-description">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; connect-src 'self' blob: https:; object-src 'none'; base-uri 'self'; form-action 'none'" data-name="meta-csp">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; connect-src 'self' blob: https: http://127.0.0.1:* http://localhost:*; object-src 'none'; base-uri 'self'; form-action 'none'" data-name="meta-csp">
 <title data-name="title">手绘提示词工作台 · 渐进式亮色版</title>
 <link rel="stylesheet" href="./workbench.css" data-name="stylesheet">
 <script type="module" src="./workbench.mjs" data-name="module"></script>
@@ -1417,18 +1417,21 @@
         <div class="result-actions" data-name="gen-actions">
           <a id="gen-settings-link" class="button secondary" href="./model-settings.html" data-name="gen-settings-link">配置模型 Key</a>
           <label for="gen-size" class="inline-label" data-name="gen-size-label">尺寸</label>
-          <select id="gen-size" data-name="gen-size"><option value="" data-name="gen-size-default">模型默认</option><option value="1024x1024" data-name="gen-size-square">方形 1024×1024</option><option value="1024x1536" data-name="gen-size-vertical">竖版 1024×1536</option><option value="1536x1024" data-name="gen-size-horizontal">横版 1536×1024</option></select>
+          <select id="gen-size" data-name="gen-size"><option value="" data-name="gen-size-default">模型默认</option><option value="1024x1024" data-name="gen-size-square">方形 1024×1024</option><option value="1024x1536" data-name="gen-size-vertical">竖版 1024×1536</option><option value="1536x1024" data-name="gen-size-horizontal">横版 1536×1024</option><option value="2048x2048" data-name="gen-size-square-2k">方形 2K 2048×2048</option><option value="1152x2048" data-name="gen-size-vertical-2k">竖版 2K 1152×2048</option><option value="2048x1152" data-name="gen-size-horizontal-2k">横版 2K 2048×1152</option><option value="2880x2880" data-name="gen-size-square-4k">方形 4K 2880×2880</option><option value="2160x3840" data-name="gen-size-vertical-4k">竖版 4K 2160×3840</option><option value="3840x2160" data-name="gen-size-horizontal-4k">横版 4K 3840×2160</option></select>
+          <label for="gen-quality" id="gen-quality-label" class="inline-label" hidden data-name="gen-quality-label">质量</label>
+          <select id="gen-quality" hidden data-name="gen-quality"><option value="" data-name="gen-quality-auto">自动（high）</option><option value="low" data-name="gen-quality-low">low</option><option value="medium" data-name="gen-quality-medium">medium</option><option value="high" data-name="gen-quality-high">high</option><option value="xhigh" data-name="gen-quality-xhigh">xhigh</option><option value="max" data-name="gen-quality-max">max（最高）</option></select>
           <button id="gen-image" type="button" class="button primary" disabled data-name="gen-image">生成图片</button>
           <button id="gen-cancel" type="button" class="button secondary" hidden data-name="gen-cancel">取消生成</button>
           <a id="gen-download" class="button secondary" aria-disabled="true" data-name="gen-download">下载图片</a>
         </div>
-        <p class="muted" data-name="gen-size-note">尺寸支持因模型而异，报错时改回模型默认。</p>
-        <p id="gen-loading" class="muted" hidden data-name="gen-loading">正在生成图片，通常需要 10–60 秒…</p>
-        <p id="gen-slow" class="muted" hidden data-name="gen-slow">仍在生成：部分模型超过 1 分钟，可继续等待或取消。</p>
+        <p class="muted" data-name="gen-size-note">尺寸与质量支持因模型而异：TY AI 中转可用 2K/4K 与五档质量（4K 旧模型自动 high）；OpenAI 仅 1024 系列；报错时改回模型默认。</p>
+        <p id="gen-loading" class="muted" hidden data-name="gen-loading">正在生成图片，通常 10–60 秒；2K/4K 高清可能 1–5 分钟…</p>
+        <p id="gen-slow" class="muted" hidden data-name="gen-slow">仍在生成：高清模型可能超过 3 分钟，可继续等待或取消。</p>
         <textarea id="gen-error" rows="3" readonly class="error-input" hidden data-name="gen-error"></textarea>
         <button id="gen-fallback" type="button" class="button secondary" hidden data-name="gen-fallback">改用 dall-e-3 重试</button>
         <p id="gen-fallback-note" class="muted" hidden data-name="gen-fallback-note">dall-e-3 无需组织验证，通常更快。点击后改用 dall-e-3、尺寸重置为模型默认并立即重试；提示词超过 4000 字符会被拒绝，可精简内容。</p>
         <p id="gen-stale" class="banner" hidden data-name="gen-stale">设置已修改，下方图片为上一次生成；重新生成提示词与图片后可下载。</p>
+        <p id="gen-remote-note" class="muted" hidden data-name="gen-remote-note">远程图片链接可能过期（部分仅 1 小时），请尽快下载保存。</p>
         <img id="gen-image-preview" class="gen-img" alt="本次生成的图片" hidden data-name="gen-image-preview">
       </div>
     </div>

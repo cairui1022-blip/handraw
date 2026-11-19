@@ -7,7 +7,7 @@
 <meta name="best-print-height" content="900" data-name="meta-height">
 <meta name="device-type" content="pc" data-name="meta-device">
 <meta name="description" content="配置生图模型 API Key，仅存本浏览器；配置后工作台可直接生成图片。" data-name="meta-description">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https:; object-src 'none'; base-uri 'self'; form-action 'none'" data-name="meta-csp">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https: http://127.0.0.1:* http://localhost:*; object-src 'none'; base-uri 'self'; form-action 'none'" data-name="meta-csp">
 <title data-name="title">模型配置 · Handraw</title>
 <link rel="stylesheet" href="./workbench.css" data-name="stylesheet">
 <script type="module" src="./model-settings.mjs" data-name="module"></script>
@@ -24,8 +24,10 @@
     <label data-name="active-label">当前使用的模型服务</label>
     <div class="form-grid" role="radiogroup" aria-label="当前使用的模型服务" data-name="active-grid">
 <label class="form-card" data-name="active-card-openai"><input type="radio" name="active-provider" value="openai" checked data-name="active-openai"><span data-name="active-title-openai">OpenAI · GPT Image / DALL·E</span></label>
+<label class="form-card" data-name="active-card-tyai"><input type="radio" name="active-provider" value="tyai" data-name="active-tyai"><span data-name="active-title-tyai">TY AI 中转 · GPT Image 2/2.5/2.6</span></label>
 <label class="form-card" data-name="active-card-zhipu"><input type="radio" name="active-provider" value="zhipu" data-name="active-zhipu"><span data-name="active-title-zhipu">智谱 · CogView</span></label>
 <label class="form-card" data-name="active-card-siliconflow"><input type="radio" name="active-provider" value="siliconflow" data-name="active-siliconflow"><span data-name="active-title-siliconflow">SiliconFlow · FLUX / Qwen-Image</span></label>
+<label class="form-card" data-name="active-card-dashscope"><input type="radio" name="active-provider" value="dashscope" data-name="active-dashscope"><span data-name="active-title-dashscope">百炼 · Qwen-Image / Wanx（本地转发）</span></label>
 <label class="form-card" data-name="active-card-custom"><input type="radio" name="active-provider" value="custom" data-name="active-custom"><span data-name="active-title-custom">自定义 · OpenAI 兼容地址</span></label>
     </div>
     <div class="visual-grid" data-name="provider-grid">
@@ -37,6 +39,17 @@
         <input id="model-openai" type="text" value="gpt-image-1" placeholder="" data-name="model-openai">
         <label for="baseurl-openai" data-name="baseurl-label-openai">服务地址（https，OpenAI 兼容）</label>
         <input id="baseurl-openai" type="text" value="https://api.openai.com/v1" placeholder="" data-name="baseurl-openai">
+        <p class="muted" id="provider-hint-openai" data-name="provider-hint-openai">gpt-image-1 需组织验证（通过后约 15 分钟生效）；未验证可填 dall-e-3。</p>
+      </div>
+      <div class="visual-card" data-name="provider-tyai">
+        <h3 data-name="provider-title-tyai">TY AI 中转 · GPT Image 2/2.5/2.6</h3>
+        <label for="key-tyai" data-name="key-label-tyai">API Key</label>
+        <input id="key-tyai" type="password" autocomplete="off" placeholder="仅存本浏览器" data-name="key-tyai">
+        <label for="model-tyai" data-name="model-label-tyai">模型名</label>
+        <input id="model-tyai" type="text" value="gpt-image-2-1k" placeholder="" data-name="model-tyai">
+        <label for="baseurl-tyai" data-name="baseurl-label-tyai">服务地址（https，OpenAI 兼容）</label>
+        <input id="baseurl-tyai" type="text" value="https://tyaiapi.com/v1" placeholder="" data-name="baseurl-tyai">
+        <p class="muted" id="provider-hint-tyai" data-name="provider-hint-tyai">模型如 gpt-image-2-1k（快）、gpt-image-2.5-sunburst-4k-max（4K 五档质量）、gpt-image-2-4k-high（自动 quality=high）；grok-imagine-image-2.0 不传质量。</p>
       </div>
       <div class="visual-card" data-name="provider-zhipu">
         <h3 data-name="provider-title-zhipu">智谱 · CogView</h3>
@@ -46,6 +59,7 @@
         <input id="model-zhipu" type="text" value="cogview-4" placeholder="" data-name="model-zhipu">
         <label for="baseurl-zhipu" data-name="baseurl-label-zhipu">服务地址（https，OpenAI 兼容）</label>
         <input id="baseurl-zhipu" type="text" value="https://open.bigmodel.cn/api/paas/v4" placeholder="" data-name="baseurl-zhipu">
+        <p class="muted" id="provider-hint-zhipu" data-name="provider-hint-zhipu">如 cogview-4。</p>
       </div>
       <div class="visual-card" data-name="provider-siliconflow">
         <h3 data-name="provider-title-siliconflow">SiliconFlow · FLUX / Qwen-Image</h3>
@@ -55,6 +69,17 @@
         <input id="model-siliconflow" type="text" value="black-forest-labs/FLUX.1-schnell" placeholder="" data-name="model-siliconflow">
         <label for="baseurl-siliconflow" data-name="baseurl-label-siliconflow">服务地址（https，OpenAI 兼容）</label>
         <input id="baseurl-siliconflow" type="text" value="https://api.siliconflow.cn/v1" placeholder="" data-name="baseurl-siliconflow">
+        <p class="muted" id="provider-hint-siliconflow" data-name="provider-hint-siliconflow">Qwen 填 Qwen/Qwen-Image；FLUX 填 black-forest-labs/FLUX.1-schnell。返回链接 1 小时有效。</p>
+      </div>
+      <div class="visual-card" data-name="provider-dashscope">
+        <h3 data-name="provider-title-dashscope">百炼 · Qwen-Image / Wanx（本地转发）</h3>
+        <label for="key-dashscope" data-name="key-label-dashscope">API Key</label>
+        <input id="key-dashscope" type="password" autocomplete="off" placeholder="仅存本浏览器" data-name="key-dashscope">
+        <label for="model-dashscope" data-name="model-label-dashscope">模型名</label>
+        <input id="model-dashscope" type="text" value="qwen-image-2.0-pro" placeholder="" data-name="model-dashscope">
+        <label for="baseurl-dashscope" data-name="baseurl-label-dashscope">服务地址（https，OpenAI 兼容）</label>
+        <input id="baseurl-dashscope" type="text" value="http://127.0.0.1:8787" placeholder="" data-name="baseurl-dashscope">
+        <p class="muted" id="provider-hint-dashscope" data-name="provider-hint-dashscope">阿里云百炼原生接口（非 OpenAI 兼容），需在本机运行 node dashscope-relay-server.mjs 后使用；qwen-image-2.0 系列同步出图（推荐），qwen-image / wanx 走异步任务自动轮询。模型名示例：qwen-image-2.0-pro、qwen-image、wanx2.1-t2i-turbo。图片链接 24 小时有效。</p>
       </div>
       <div class="visual-card" data-name="provider-custom">
         <h3 data-name="provider-title-custom">自定义 · OpenAI 兼容地址</h3>
@@ -64,6 +89,7 @@
         <input id="model-custom" type="text" value="" placeholder="例如 gpt-image-1 / cogview-4" data-name="model-custom">
         <label for="baseurl-custom" data-name="baseurl-label-custom">服务地址（https，OpenAI 兼容）</label>
         <input id="baseurl-custom" type="text" value="" placeholder="https://你的兼容地址/v1" data-name="baseurl-custom">
+        <p class="muted" id="provider-hint-custom" data-name="provider-hint-custom">任何 OpenAI 兼容 /images/generations 地址（https）。</p>
       </div>
     </div>
     <div class="stage-actions" data-name="settings-actions">
@@ -74,7 +100,7 @@
     <label for="settings-status" data-name="status-label">状态</label>
     <textarea id="settings-status" rows="2" readonly data-name="settings-status"></textarea>
     <label data-name="show-keys-label"><input id="show-keys" type="checkbox" data-name="show-keys"> 显示 Key</label>
-    <p class="muted" data-name="settings-cors">生图由浏览器直连服务地址：需网络可达且对方允许跨域（CORS）。中国大陆网络通常无法直连 api.openai.com，需代理或中转地址；OpenAI 的 gpt-image-1 需完成组织验证，未验证可改用 dall-e-3。失败时会自动诊断并显示具体原因；也可改用支持浏览器调用的 OpenAI 兼容地址（协议 /images/generations）。费用与额度由模型服务方决定。</p>
+    <p class="muted" data-name="settings-cors">生图由浏览器直连服务地址：需网络可达且对方允许跨域（CORS）。百炼（Qwen）使用原生接口，需先在本机启动转发服务 node dashscope-relay-server.mjs（默认 http://127.0.0.1:8787），前端选「百炼」即可；生成可能需数分钟，超时为 10 分钟，超时后请勿重复提交以免重复扣费。中国大陆网络通常无法直连 api.openai.com，需代理或中转地址；OpenAI 的 gpt-image-1 需完成组织验证，未验证可改用 dall-e-3。失败时会自动诊断并显示具体原因；也可改用支持浏览器调用的 OpenAI 兼容地址（协议 /images/generations）。费用与额度由模型服务方决定。</p>
   </section>
 </main>
 <footer class="footer" data-name="footer">

@@ -1,10 +1,13 @@
 export const PROVIDERS = [
   {id: 'openai', label: 'OpenAI · GPT Image / DALL·E', baseUrl: 'https://api.openai.com/v1', model: 'gpt-image-1'},
+  {id: 'tyai', label: 'TY AI 中转 · GPT Image 2/2.5/2.6', baseUrl: 'https://tyaiapi.com/v1', model: 'gpt-image-2-1k'},
   {id: 'zhipu', label: '智谱 · CogView', baseUrl: 'https://open.bigmodel.cn/api/paas/v4', model: 'cogview-4'},
   {id: 'siliconflow', label: 'SiliconFlow · FLUX / Qwen-Image', baseUrl: 'https://api.siliconflow.cn/v1', model: 'black-forest-labs/FLUX.1-schnell'},
+  {id: 'dashscope', label: '百炼 · Qwen-Image / Wanx（本地转发）', baseUrl: 'http://127.0.0.1:8787', model: 'qwen-image-2.0-pro'},
   {id: 'custom', label: '自定义 · OpenAI 兼容地址', baseUrl: '', model: ''}
 ];
 export const STORAGE_KEY = 'handraw.modelSettings.v1';
+export const GENERATION_TIMEOUT_MS = 600000;
 
 export function defaultSettings() {
   const providers = {};
@@ -38,6 +41,12 @@ export function clearSettings(storage) {
   storage.removeItem(STORAGE_KEY);
 }
 
+const LOOPBACK_HTTP = /^http:\/\/(127\.0\.0\.1|localhost)(:\d{2,5})?(\/|$)/;
+export function isAllowedBaseUrl(baseUrl) {
+  const v = String(baseUrl || '').trim();
+  return /^https:\/\//.test(v) || LOOPBACK_HTTP.test(v);
+}
+
 export function resolveActive(settings) {
   const preset = PROVIDERS.find(p => p.id === settings.active);
   const conf = settings.providers?.[settings.active];
@@ -45,24 +54,38 @@ export function resolveActive(settings) {
   const apiKey = conf.apiKey.trim();
   const model = conf.model.trim();
   const baseUrl = conf.baseUrl.trim().replace(/\/+$/, '');
-  if (!apiKey || !model || !/^https:\/\//.test(baseUrl)) return null;
+  if (!apiKey || !model || !isAllowedBaseUrl(baseUrl)) return null;
   return {id: preset.id, label: preset.label, baseUrl, model, apiKey};
 }
 
-export function buildGenerationRequest({baseUrl, model, apiKey, prompt, size}) {
+export function autoQuality(model) {
+  const m = String(model || '').toLowerCase();
+  if (/4k-high$/.test(m) || /4k$/.test(m) || /4k-max$/.test(m)) return 'high';
+  return '';
+}
+
+export function buildGenerationRequest({baseUrl, model, apiKey, prompt, size, quality = '', provider = ''}) {
+  const root = baseUrl.replace(/\/+$/, '');
+  let body;
+  let path = '/images/generations';
+  if (provider === 'siliconflow') body = {model, prompt, image_size: size || '1024x1024', batch_size: 1};
+  else if (provider === 'dashscope') {
+    body = {model, prompt, ...(size ? {size} : {})};
+    path = '/api/generate';
+  } else body = {model, prompt, n: 1, ...(size ? {size} : {}), ...(quality ? {quality} : {})};
   return {
-    url: baseUrl.replace(/\/+$/, '') + '/images/generations',
+    url: root + path,
     init: {
       method: 'POST',
       headers: {'Content-Type': 'application/json', Authorization: 'Bearer ' + apiKey},
-      body: JSON.stringify({model, prompt, n: 1, ...(size ? {size} : {})})
+      body: JSON.stringify(body)
     }
   };
 }
 
 export function parseGenerationResponse(json) {
   if (json?.error) throw new Error(json.error.message || '模型服务返回错误。');
-  const entry = json?.data?.[0];
+  const entry = json?.data?.[0] || json?.images?.[0];
   if (entry?.b64_json) return {src: 'data:' + b64Mime(entry.b64_json) + ';base64,' + entry.b64_json, remote: false};
   if (typeof entry?.url === 'string' && /^https:\/\//.test(entry.url)) return {src: entry.url, remote: true};
   throw new Error('响应中没有图片，请稍后重试或更换模型。');
@@ -85,7 +108,7 @@ export function testConnectionRequest({baseUrl, apiKey}) {
 }
 
 export function generationErrorText(err, status, body, opts = {}) {
-  if (err === 'timeout' || err?.name === 'TimeoutError' || err?.message === 'timeout') return '生成超时（120 秒）。可重试、更换模型或改回默认尺寸。';
+  if (err === 'timeout' || err?.name === 'TimeoutError' || err?.message === 'timeout') return '生成超时（' + Math.round(GENERATION_TIMEOUT_MS / 60000) + ' 分钟）。请求可能已在服务端完成，请勿连续重试以免重复扣费；可更换模型、改回默认尺寸或稍后再试。';
   if (err === 'cancel' || err?.name === 'AbortError') return '已取消本次生成。';
   if (status === 401 || status === 403) return 'Key 无效或无权限（401/403）：' + (apiMessage(body) || '请到模型配置检查 Key。');
   if (status === 429) return '额度不足或触发限流（429）：' + (apiMessage(body) || '稍后重试或更换模型。');
@@ -105,7 +128,8 @@ export function generationErrorText(err, status, body, opts = {}) {
   return '无法连接模型服务：可能是网络、CORS 或地址问题。可在模型配置改用支持浏览器调用的兼容地址。';
 }
 function apiMessage(body) {
-  const m = body?.error?.message;
+  let m = body?.error?.message;
+  if (typeof m !== 'string' || !m.trim()) m = typeof body?.message === 'string' ? body.message : (typeof body === 'string' ? body : '');
   if (typeof m !== 'string' || !m.trim()) return '';
   const t = m.trim();
   return t.length > 160 ? t.slice(0, 160) + '…' : t;
