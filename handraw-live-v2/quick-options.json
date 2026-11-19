@@ -1,0 +1,22 @@
+{
+  "layouts": {
+    "social-card": ["SC-016", "SC-018", "SC-019"],
+    "infographic": ["IG-001", "IG-002", "IG-003"],
+    "comic-storyboard": ["SB-001", "SB-002", "SB-003"],
+    "ip-character": ["IP-001", "IP-002", "IP-003"],
+    "ecommerce": ["EC-001", "EC-002", "EC-003"]
+  },
+  "styles": ["FA-003", "FA-001", "FB-001"],
+  "colors": ["C-26", "C-01", "C-30"],
+  "examples": {
+    "social-standard": {"kind": "social-card", "socialForm": "standard", "topic": "周末别排满计划，留点时间给自己。"},
+    "social-signature": {"kind": "social-card", "socialForm": "signature", "name": "张小明", "pinyin": "ZHANG XIAOMING"},
+    "social-photo-split": {"kind": "social-card", "socialForm": "photo-split", "topic": "把旅行照片做成上下双拼故事"},
+    "social-knowledge-cover": {"kind": "social-card", "socialForm": "knowledge-cover", "topic": "三分钟看懂手冲咖啡水温"},
+    "infographic": {"kind": "infographic", "socialForm": "standard", "topic": "已核验：项目三个月里程碑与负责人"},
+    "comic-storyboard": {"kind": "comic-storyboard", "socialForm": "standard", "topic": "猫咪第一次出门的六格小故事"},
+    "ip-character": {"kind": "ip-character", "socialForm": "standard", "topic": "一只爱收集落叶的小狐狸角色设定"},
+    "ecommerce": {"kind": "ecommerce", "socialForm": "standard", "topic": "真实商品：白色陶瓷马克杯，350ml，哑光釉面"},
+    "pure-image": {"kind": "pure-image", "socialForm": "standard", "topic": "清晨海边的薄雾与灯塔"}
+  }
+}

@@ -1,0 +1,854 @@
+<!doctype html>
+<html lang="zh-CN" data-name="html">
+<head data-name="head">
+<meta charset="utf-8" data-name="meta-charset">
+<meta name="viewport" content="width=device-width,initial-scale=1" data-name="meta-viewport">
+<meta name="best-print-width" content="1440" data-name="meta-width">
+<meta name="best-print-height" content="1120" data-name="meta-height">
+<meta name="device-type" content="pc" data-name="meta-device">
+<meta name="description" content="按用途、内容、视觉、结果逐步生成手绘提示词；亮色工作台，不直接出图。" data-name="meta-description">
+<title data-name="title">手绘提示词工作台 · 渐进式亮色版</title>
+<link rel="stylesheet" href="./workbench.css" data-name="stylesheet">
+<script type="module" src="./workbench.mjs" data-name="module"></script>
+</head>
+<body data-name="body" data-catalog-status="loading">
+<noscript data-name="noscript"><p data-name="noscript-text">此工作台需要启用 JavaScript 才能组合提示词。请启用脚本或更换浏览器。</p></noscript>
+<header class="topbar" data-name="header">
+  <div class="brand" data-name="brand"><strong data-name="brand-name">HANDRAW</strong><span data-name="brand-sub">手绘提示词工作台</span></div>
+  <p class="capability" data-name="capability">生成文字提示词，不直接出图</p>
+  <nav class="steps" aria-label="创作步骤" data-name="steps">
+    <button type="button" class="step" data-stage="purpose" data-name="step-purpose">1 选用途</button>
+    <button type="button" class="step" data-stage="content" data-name="step-content">2 填内容</button>
+    <button type="button" class="step" data-stage="visual" data-name="step-visual">3 选视觉</button>
+    <button type="button" class="step" data-stage="result" data-name="step-result">4 得提示词</button>
+  </nav>
+  <div class="top-actions" data-name="top-actions">
+    <button id="help-toggle" type="button" class="button secondary" data-panel="help" aria-expanded="false" data-name="help-toggle">怎么使用</button>
+    <a class="button secondary" href="../handraw-full-v3/skill-effects.html" target="_blank" rel="noopener" data-name="effects-link">Skill 效果库（示意，新窗口）</a>
+  </div>
+</header>
+<main class="wrap" data-name="main">
+  <p id="catalog-loading" class="muted" data-name="catalog-loading">目录加载中…内容可以先填写。</p>
+  <div id="catalog-error" class="banner error" hidden data-name="catalog-error"><p data-name="catalog-error-text">目录未加载完成，内容不会丢失。</p><button id="retry-catalog" type="button" class="button secondary" data-name="retry-catalog">重新加载目录</button></div>
+  <p id="error-topic" class="error" data-error hidden data-name="error-topic">请输入 2–2000 个字符，不会自动截断原文。</p>
+<p id="error-identifier" class="error" data-error hidden data-name="error-identifier">内容包含资产编号，请改用名称描述；原文不会被自动删改。</p>
+<p id="error-name" class="error" data-error hidden data-name="error-name">请输入 2–8 个汉字姓名。</p>
+<p id="error-pinyin" class="error" data-error hidden data-name="error-pinyin">请填写英文拼音：字母开头，可含空格、单引号或连字符。</p>
+<p id="error-catalog" class="error" data-error hidden data-name="error-catalog">目录未加载完成，内容不会丢失。请重试。</p>
+<p id="error-kind" class="error" data-error hidden data-name="error-kind">请先选择你想制作的内容。</p>
+<p id="error-layout" class="error" data-error hidden data-name="error-layout">请选择当前任务下存在的图型。</p>
+<p id="error-style" class="error" data-error hidden data-name="error-style">请选择目录中存在的画风。</p>
+<p id="error-colors" class="error" data-error hidden data-name="error-colors">最多选择三种不同配色。</p>
+<p id="error-ratio" class="error" data-error hidden data-name="error-ratio">画幅比例不受支持。</p>
+<p id="error-splitType" class="error" data-error hidden data-name="error-splitType">请选择一种双拼玩法。</p>
+<p id="error-output" class="error" data-error hidden data-name="error-output">组合结果包含未解析的资产编号，已阻止输出。</p>
+<p id="error-generic" class="error" data-error hidden data-name="error-generic">暂时无法生成，请检查输入后重试。</p>
+  <section id="purpose-panel" class="stage" aria-labelledby="purpose-title" data-name="purpose-panel">
+    <h2 id="purpose-title" tabindex="-1" data-name="purpose-title">你想制作什么？</h2>
+    <p class="muted" data-name="purpose-hint">先选用途，再填写对应内容。视觉设置可以稍后使用默认值。</p>
+    <div id="kind" class="kind-grid" role="radiogroup" aria-label="制作用途" data-name="kind">
+      <label class="kind-card" data-name="kind-card-social-card"><input type="radio" name="kind" value="social-card" data-name="kind-social-card"><span class="kind-title" data-name="kind-title-social-card">社媒图文</span><small data-name="kind-desc-social-card">封面、卡片、姓名签名、照片双拼</small></label>
+<label class="kind-card" data-name="kind-card-infographic"><input type="radio" name="kind" value="infographic" data-name="kind-infographic"><span class="kind-title" data-name="kind-title-infographic">信息图</span><small data-name="kind-desc-infographic">把已核验信息做成图解</small></label>
+<label class="kind-card" data-name="kind-card-comic-storyboard"><input type="radio" name="kind" value="comic-storyboard" data-name="kind-comic-storyboard"><span class="kind-title" data-name="kind-title-comic-storyboard">故事分镜</span><small data-name="kind-desc-comic-storyboard">多格叙事与场景</small></label>
+<label class="kind-card" data-name="kind-card-ip-character"><input type="radio" name="kind" value="ip-character" data-name="kind-ip-character"><span class="kind-title" data-name="kind-title-ip-character">角色与 IP</span><small data-name="kind-desc-ip-character">角色设定、三视图、表情包</small></label>
+<label class="kind-card" data-name="kind-card-ecommerce"><input type="radio" name="kind" value="ecommerce" data-name="kind-ecommerce"><span class="kind-title" data-name="kind-title-ecommerce">电商商品图</span><small data-name="kind-desc-ecommerce">商品主图、多角度、细节</small></label>
+<label class="kind-card" data-name="kind-card-pure-image"><input type="radio" name="kind" value="pure-image" data-name="kind-pure-image"><span class="kind-title" data-name="kind-title-pure-image">纯画面</span><small data-name="kind-desc-pure-image">只要画面，不生成文字</small></label>
+    </div>
+    <button id="purpose-forms-toggle" type="button" class="button secondary" data-panel="purposeForms" aria-expanded="false" hidden data-name="purpose-forms-toggle">更多社媒形式</button>
+    <div id="social-form" class="form-grid" role="radiogroup" aria-label="社媒形式" hidden data-name="purpose-forms">
+      <label class="form-card" data-name="form-card-standard"><input type="radio" name="social-form" value="standard" data-name="social-form-standard"><span data-name="form-title-standard">普通图文</span><small data-name="form-desc-standard">默认社媒卡</small></label>
+<label class="form-card" data-name="form-card-signature"><input type="radio" name="social-form" value="signature" data-name="social-form-signature"><span data-name="form-title-signature">姓名签名</span><small data-name="form-desc-signature">需要姓名与拼音</small></label>
+<label class="form-card" data-name="form-card-photo-split"><input type="radio" name="social-form" value="photo-split" data-name="social-form-photo-split"><span data-name="form-title-photo-split">照片双拼</span><small data-name="form-desc-photo-split">需在生图工具上传照片</small></label>
+<label class="form-card" data-name="form-card-knowledge-cover"><input type="radio" name="social-form" value="knowledge-cover" data-name="social-form-knowledge-cover"><span data-name="form-title-knowledge-cover">知识封面</span><small data-name="form-desc-knowledge-cover">固定 4:5 情景封面</small></label>
+    </div>
+    <div class="stage-actions" data-name="purpose-actions"><button id="continue-purpose" type="button" class="button primary" data-name="continue-purpose">开始填写</button></div>
+  </section>
+  <section id="content-panel" class="stage" aria-labelledby="content-title" hidden data-name="content-panel">
+    <h2 id="content-title" tabindex="-1" data-name="content-title">填写内容</h2>
+    <div id="topic-fields" data-name="topic-fields">
+      <label for="topic" data-name="topic-label">主题 / 文案 / 已有资料</label>
+      <textarea id="topic" rows="6" placeholder="例如：周末别排满计划，留点时间给自己。" data-name="topic"></textarea>
+      <p class="muted" data-name="topic-rule">2–2000 个字符，保留原文。电商请写明真实商品资料。</p>
+    </div>
+    <div id="signature-fields" hidden data-name="signature-fields">
+      <label for="name" data-name="name-label">姓名（2–8 个汉字）</label>
+      <input id="name" type="text" autocomplete="off" placeholder="请输入你的姓名" data-name="name">
+      <label for="pinyin" data-name="pinyin-label">英文拼音</label>
+      <input id="pinyin" type="text" autocomplete="off" placeholder="例如：ZHANG XIAOMING" data-name="pinyin">
+      <p class="muted" data-name="signature-rule">姓名签名卡固定 9:16，保留四款签名骨架。</p>
+    </div>
+    <p id="photo-split-note" class="banner" hidden data-name="photo-split-note">本站不接收照片。请在生图工具上传自己的照片；这里只组合双拼玩法指令。</p>
+    <p id="ecommerce-note" class="banner" hidden data-name="ecommerce-note">商品主体保持写实；无资料不得虚构参数、评价、认证或承诺。</p>
+    <p id="pure-image-note" class="banner" hidden data-name="pure-image-note">纯画面不生成文字、字母、标语或 Logo，也不使用图文版式。</p>
+    <div class="stage-actions" data-name="content-actions"><button id="continue-content" type="button" class="button primary" data-name="continue-content">下一步：选视觉</button></div>
+  </section>
+  <section id="visual-panel" class="stage" aria-labelledby="visual-title" hidden data-name="visual-panel">
+    <h2 id="visual-title" tabindex="-1" data-name="visual-title">选择视觉</h2>
+    <p class="muted" data-name="visual-hint">以下是默认选择，可直接生成。需要时再展开完整目录。</p>
+    <div class="visual-grid" data-name="visual-grid">
+      <div id="layout-card" class="visual-card" data-name="layout-card">
+        <label for="summary-layout" data-name="summary-layout-label">当前版式</label>
+        <input id="summary-layout" type="text" readonly data-name="summary-layout">
+        <button id="change-layout" type="button" class="button secondary" data-panel="layout" aria-expanded="false" data-name="change-layout">换版式</button>
+        <div id="layout-panel" hidden data-name="layout-panel"><select id="layout" aria-label="完整图型目录" data-name="layout"><optgroup label="社媒图文" data-category="social-card" data-name="layout-group-social-card"><option value="SC-001" data-category="social-card" data-name="layout-SC-001">SC-001 · 上文下图社媒卡</option>
+<option value="SC-002" data-category="social-card" data-name="layout-SC-002">SC-002 · 文案主导底部辅助图卡</option>
+<option value="SC-003" data-category="social-card" data-name="layout-SC-003">SC-003 · 上下双格图文卡</option>
+<option value="SC-004" data-category="social-card" data-name="layout-SC-004">SC-004 · 上下双格图文分区卡</option>
+<option value="SC-005" data-category="social-card" data-name="layout-SC-005">SC-005 · 气泡文字思考IP卡</option>
+<option value="SC-006" data-category="social-card" data-name="layout-SC-006">SC-006 · 三层标题辅助图卡</option>
+<option value="SC-007" data-category="social-card" data-name="layout-SC-007">SC-007 · 引号关键词文字卡</option>
+<option value="SC-008" data-category="social-card" data-name="layout-SC-008">SC-008 · 图上文下留白卡</option>
+<option value="SC-009" data-category="social-card" data-name="layout-SC-009">SC-009 · 居中文字右下辅助图卡</option>
+<option value="SC-010" data-category="social-card" data-name="layout-SC-010">SC-010 · 上下双格标题列表卡</option>
+<option value="SC-011" data-category="social-card" data-name="layout-SC-011">SC-011 · 中心主图多场景信息卡</option>
+<option value="SC-012" data-category="social-card" data-name="layout-SC-012">SC-012 · 中心标题上下图标卡</option>
+<option value="SC-014" data-category="social-card" data-name="layout-SC-014">SC-014 · 留白驱动主视觉信息卡</option>
+<option value="SC-015" data-category="social-card" data-name="layout-SC-015">SC-015 · 上下双区递进短句卡</option>
+<option value="SC-016" data-category="social-card" data-name="layout-SC-016">SC-016 · 极简大字小图点缀卡</option>
+<option value="SC-017" data-category="social-card" data-name="layout-SC-017">SC-017 · 自由标注留白信息卡</option>
+<option value="SC-018" data-category="social-card" data-name="layout-SC-018">SC-018 · 中心主视觉环绕信息卡</option>
+<option value="SC-019" data-category="social-card" data-name="layout-SC-019">SC-019 · 中央人物细线标注卡</option>
+<option value="SC-020" data-category="social-card" data-name="layout-SC-020">SC-020 · 一大一组非对称信息卡</option>
+<option value="SC-021" data-category="social-card" data-name="layout-SC-021">SC-021 · 自适应双拼照片转译社媒卡</option>
+<option value="SC-022" data-category="social-card" data-name="layout-SC-022">SC-022 · 姓名四款签名设计展示卡</option>
+<option value="SC-023" data-category="social-card" data-name="layout-SC-023">SC-023 · 代表性情景概括知识封面卡</option>
+<option value="SC-024" data-category="social-card" data-name="layout-SC-024">SC-024 · 图下文上留白卡</option>
+<option value="SC-025" data-category="social-card" data-name="layout-SC-025">SC-025 · 漫画型社媒卡</option></optgroup>
+<optgroup label="信息图" data-category="infographic" data-name="layout-group-infographic"><option value="IG-001" data-category="infographic" data-name="layout-IG-001">IG-001 · 标题金字塔图标信息图</option>
+<option value="IG-002" data-category="infographic" data-name="layout-IG-002">IG-002 · 中心主图标注信息图</option>
+<option value="IG-003" data-category="infographic" data-name="layout-IG-003">IG-003 · 多行左文右图信息图</option>
+<option value="IG-004" data-category="infographic" data-name="layout-IG-004">IG-004 · 双列多行对比信息图</option>
+<option value="IG-005" data-category="infographic" data-name="layout-IG-005">IG-005 · 大主视觉下方图鉴信息图</option>
+<option value="IG-006" data-category="infographic" data-name="layout-IG-006">IG-006 · 多层标题图标对比信息图</option>
+<option value="IG-007" data-category="infographic" data-name="layout-IG-007">IG-007 · 粗体标题标签小图卡</option>
+<option value="IG-008" data-category="infographic" data-name="layout-IG-008">IG-008 · 多路径流程步骤图</option>
+<option value="IG-009" data-category="infographic" data-name="layout-IG-009">IG-009 · 时间轴节点信息图</option>
+<option value="IG-010" data-category="infographic" data-name="layout-IG-010">IG-010 · 阶段等级进阶信息图</option>
+<option value="IG-011" data-category="infographic" data-name="layout-IG-011">IG-011 · 前后变化对比信息图</option>
+<option value="IG-012" data-category="infographic" data-name="layout-IG-012">IG-012 · 分层结构型信息图</option>
+<option value="IG-013" data-category="infographic" data-name="layout-IG-013">IG-013 · 漏斗转化型信息图</option>
+<option value="IG-014" data-category="infographic" data-name="layout-IG-014">IG-014 · 四象限矩阵信息图</option>
+<option value="IG-015" data-category="infographic" data-name="layout-IG-015">IG-015 · 坐标散点型信息图</option>
+<option value="IG-016" data-category="infographic" data-name="layout-IG-016">IG-016 · 分类树状型信息图</option>
+<option value="IG-017" data-category="infographic" data-name="layout-IG-017">IG-017 · 思维导图型信息图</option>
+<option value="IG-018" data-category="infographic" data-name="layout-IG-018">IG-018 · 关系网络型信息图</option>
+<option value="IG-019" data-category="infographic" data-name="layout-IG-019">IG-019 · 循环闭环型信息图</option>
+<option value="IG-020" data-category="infographic" data-name="layout-IG-020">IG-020 · 路径地图型信息图</option>
+<option value="IG-021" data-category="infographic" data-name="layout-IG-021">IG-021 · 真实地图标注型信息图</option>
+<option value="IG-022" data-category="infographic" data-name="layout-IG-022">IG-022 · 数字大字型信息图</option>
+<option value="IG-023" data-category="infographic" data-name="layout-IG-023">IG-023 · 排行榜型信息图</option>
+<option value="IG-024" data-category="infographic" data-name="layout-IG-024">IG-024 · 比例构成型信息图</option>
+<option value="IG-025" data-category="infographic" data-name="layout-IG-025">IG-025 · 尺度比较型信息图</option>
+<option value="IG-026" data-category="infographic" data-name="layout-IG-026">IG-026 · 拆解爆炸图型信息图</option>
+<option value="IG-027" data-category="infographic" data-name="layout-IG-027">IG-027 · 剖面截面型信息图</option>
+<option value="IG-028" data-category="infographic" data-name="layout-IG-028">IG-028 · 连续场景信息图</option>
+<option value="IG-029" data-category="infographic" data-name="layout-IG-029">IG-029 · 人物群像标签型信息图</option>
+<option value="IG-030" data-category="infographic" data-name="layout-IG-030">IG-030 · 一大多小知识图谱型信息图</option>
+<option value="IG-031" data-category="infographic" data-name="layout-IG-031">IG-031 · 百科全书式信息卡</option>
+<option value="IG-032" data-category="infographic" data-name="layout-IG-032">IG-032 · 手绘编辑式知识信息图</option>
+<option value="IG-033" data-category="infographic" data-name="layout-IG-033">IG-033 · 讲义式高密分析信息图</option>
+<option value="IG-034" data-category="infographic" data-name="layout-IG-034">IG-034 · 编辑式等距轴测全景地图信息图</option>
+<option value="IG-035" data-category="infographic" data-name="layout-IG-035">IG-035 · 2.5D等距轴测微缩场景</option>
+<option value="IG-036" data-category="infographic" data-name="layout-IG-036">IG-036 · 迷宫大侦探高密度轴测全景信息图</option>
+<option value="IG-037" data-category="infographic" data-name="layout-IG-037">IG-037 · 高精细手绘等距轴测地图信息图</option>
+<option value="IG-038" data-category="infographic" data-name="layout-IG-038">IG-038 · 万能信息图</option></optgroup>
+<optgroup label="故事分镜" data-category="comic-storyboard" data-name="layout-group-comic-storyboard"><option value="SB-001" data-category="comic-storyboard" data-name="layout-SB-001">SB-001 · 规则网格</option>
+<option value="SB-002" data-category="comic-storyboard" data-name="layout-SB-002">SB-002 · 四格起承转合</option>
+<option value="SB-003" data-category="comic-storyboard" data-name="layout-SB-003">SB-003 · 大格 + 小格</option>
+<option value="SB-004" data-category="comic-storyboard" data-name="layout-SB-004">SB-004 · 顶部大格开场</option>
+<option value="SB-005" data-category="comic-storyboard" data-name="layout-SB-005">SB-005 · 底部大格收尾</option>
+<option value="SB-006" data-category="comic-storyboard" data-name="layout-SB-006">SB-006 · 中央大格爆发</option>
+<option value="SB-007" data-category="comic-storyboard" data-name="layout-SB-007">SB-007 · 对角切割</option>
+<option value="SB-008" data-category="comic-storyboard" data-name="layout-SB-008">SB-008 · Z 字阅读</option>
+<option value="SB-009" data-category="comic-storyboard" data-name="layout-SB-009">SB-009 · S 型阅读</option>
+<option value="SB-010" data-category="comic-storyboard" data-name="layout-SB-010">SB-010 · 螺旋阅读</option>
+<option value="SB-011" data-category="comic-storyboard" data-name="layout-SB-011">SB-011 · 放射型分镜</option>
+<option value="SB-012" data-category="comic-storyboard" data-name="layout-SB-012">SB-012 · 碎片面板</option>
+<option value="SB-013" data-category="comic-storyboard" data-name="layout-SB-013">SB-013 · 破框构图</option>
+<option value="SB-014" data-category="comic-storyboard" data-name="layout-SB-014">SB-014 · 跨格人物</option>
+<option value="SB-015" data-category="comic-storyboard" data-name="layout-SB-015">SB-015 · 跨格背景</option>
+<option value="SB-016" data-category="comic-storyboard" data-name="layout-SB-016">SB-016 · 一镜到底</option>
+<option value="SB-017" data-category="comic-storyboard" data-name="layout-SB-017">SB-017 · 电影胶片式</option>
+<option value="SB-018" data-category="comic-storyboard" data-name="layout-SB-018">SB-018 · 宽银幕横格</option>
+<option value="SB-019" data-category="comic-storyboard" data-name="layout-SB-019">SB-019 · 竖向长格</option>
+<option value="SB-020" data-category="comic-storyboard" data-name="layout-SB-020">SB-020 · 超窄反应格</option>
+<option value="SB-021" data-category="comic-storyboard" data-name="layout-SB-021">SB-021 · 眼睛特写链</option>
+<option value="SB-022" data-category="comic-storyboard" data-name="layout-SB-022">SB-022 · 手部动作链</option>
+<option value="SB-023" data-category="comic-storyboard" data-name="layout-SB-023">SB-023 · 由远到近</option>
+<option value="SB-024" data-category="comic-storyboard" data-name="layout-SB-024">SB-024 · 由近到远</option>
+<option value="SB-025" data-category="comic-storyboard" data-name="layout-SB-025">SB-025 · 正反打</option>
+<option value="SB-026" data-category="comic-storyboard" data-name="layout-SB-026">SB-026 · 三连特写</option>
+<option value="SB-027" data-category="comic-storyboard" data-name="layout-SB-027">SB-027 · 动作分解</option>
+<option value="SB-028" data-category="comic-storyboard" data-name="layout-SB-028">SB-028 · 连续动作残影</option>
+<option value="SB-029" data-category="comic-storyboard" data-name="layout-SB-029">SB-029 · 静止重复</option>
+<option value="SB-030" data-category="comic-storyboard" data-name="layout-SB-030">SB-030 · 节奏骤停</option>
+<option value="SB-031" data-category="comic-storyboard" data-name="layout-SB-031">SB-031 · 爆发后留白</option>
+<option value="SB-032" data-category="comic-storyboard" data-name="layout-SB-032">SB-032 · 上下镜像</option>
+<option value="SB-033" data-category="comic-storyboard" data-name="layout-SB-033">SB-033 · 左右对峙</option>
+<option value="SB-034" data-category="comic-storyboard" data-name="layout-SB-034">SB-034 · 双线并行</option>
+<option value="SB-035" data-category="comic-storyboard" data-name="layout-SB-035">SB-035 · 交叉剪辑</option>
+<option value="SB-036" data-category="comic-storyboard" data-name="layout-SB-036">SB-036 · 闪回嵌套</option>
+<option value="SB-037" data-category="comic-storyboard" data-name="layout-SB-037">SB-037 · 想象嵌套</option>
+<option value="SB-038" data-category="comic-storyboard" data-name="layout-SB-038">SB-038 · 监控屏幕式</option>
+<option value="SB-039" data-category="comic-storyboard" data-name="layout-SB-039">SB-039 · 手机聊天式</option>
+<option value="SB-040" data-category="comic-storyboard" data-name="layout-SB-040">SB-040 · 档案拼贴式</option>
+<option value="SB-041" data-category="comic-storyboard" data-name="layout-SB-041">SB-041 · 杂志编辑式</option>
+<option value="SB-042" data-category="comic-storyboard" data-name="layout-SB-042">SB-042 · 信息图漫画</option>
+<option value="SB-043" data-category="comic-storyboard" data-name="layout-SB-043">SB-043 · 地图路线式</option>
+<option value="SB-044" data-category="comic-storyboard" data-name="layout-SB-044">SB-044 · 时间轴式</option>
+<option value="SB-045" data-category="comic-storyboard" data-name="layout-SB-045">SB-045 · 时钟式</option>
+<option value="SB-046" data-category="comic-storyboard" data-name="layout-SB-046">SB-046 · 中心物件式</option>
+<option value="SB-047" data-category="comic-storyboard" data-name="layout-SB-047">SB-047 · 中心人物式</option>
+<option value="SB-048" data-category="comic-storyboard" data-name="layout-SB-048">SB-048 · 环形阅读</option>
+<option value="SB-049" data-category="comic-storyboard" data-name="layout-SB-049">SB-049 · 上下坠落式</option>
+<option value="SB-050" data-category="comic-storyboard" data-name="layout-SB-050">SB-050 · 阶梯式</option>
+<option value="SB-051" data-category="comic-storyboard" data-name="layout-SB-051">SB-051 · 波浪式</option>
+<option value="SB-052" data-category="comic-storyboard" data-name="layout-SB-052">SB-052 · 自由漂浮式</option>
+<option value="SB-053" data-category="comic-storyboard" data-name="layout-SB-053">SB-053 · 无边框分镜</option>
+<option value="SB-054" data-category="comic-storyboard" data-name="layout-SB-054">SB-054 · 白场分镜</option>
+<option value="SB-055" data-category="comic-storyboard" data-name="layout-SB-055">SB-055 · 满版冲击格</option>
+<option value="SB-056" data-category="comic-storyboard" data-name="layout-SB-056">SB-056 · 跨页式单页模拟</option>
+<option value="SB-057" data-category="comic-storyboard" data-name="layout-SB-057">SB-057 · 海报式漫画</option>
+<option value="SB-058" data-category="comic-storyboard" data-name="layout-SB-058">SB-058 · 封面式叙事页</option>
+<option value="SB-059" data-category="comic-storyboard" data-name="layout-SB-059">SB-059 · 舞台式分镜</option>
+<option value="SB-060" data-category="comic-storyboard" data-name="layout-SB-060">SB-060 · 横卷式分镜</option>
+<option value="SB-061" data-category="comic-storyboard" data-name="layout-SB-061">SB-061 · 竖卷式分镜</option>
+<option value="SB-062" data-category="comic-storyboard" data-name="layout-SB-062">SB-062 · 镜面反射式</option>
+<option value="SB-063" data-category="comic-storyboard" data-name="layout-SB-063">SB-063 · 窗口式分镜</option>
+<option value="SB-064" data-category="comic-storyboard" data-name="layout-SB-064">SB-064 · 物件遮挡式</option>
+<option value="SB-065" data-category="comic-storyboard" data-name="layout-SB-065">SB-065 · 文字主导式</option>
+<option value="SB-066" data-category="comic-storyboard" data-name="layout-SB-066">SB-066 · 音效主导式</option>
+<option value="SB-067" data-category="comic-storyboard" data-name="layout-SB-067">SB-067 · 色块主导式</option>
+<option value="SB-068" data-category="comic-storyboard" data-name="layout-SB-068">SB-068 · 几何分割式</option>
+<option value="SB-069" data-category="comic-storyboard" data-name="layout-SB-069">SB-069 · 上下两格生活漫画分镜</option>
+<option value="SB-070" data-category="comic-storyboard" data-name="layout-SB-070">SB-070 · 上下四格生活漫画分镜</option>
+<option value="SB-071" data-category="comic-storyboard" data-name="layout-SB-071">SB-071 · 上下三格生活漫画分镜</option></optgroup>
+<optgroup label="角色与 IP" data-category="ip-character" data-name="layout-group-ip-character"><option value="IP-001" data-category="ip-character" data-name="layout-IP-001">IP-001 · IP定位卡</option>
+<option value="IP-002" data-category="ip-character" data-name="layout-IP-002">IP-002 · 角色形象三视图基准图</option>
+<option value="IP-003" data-category="ip-character" data-name="layout-IP-003">IP-003 · 16宫格角色微信表情包</option>
+<option value="IP-004" data-category="ip-character" data-name="layout-IP-004">IP-004 · IP服装与道具卡</option>
+<option value="IP-005" data-category="ip-character" data-name="layout-IP-005">IP-005 · IP内容传播示范卡</option>
+<option value="IP-006" data-category="ip-character" data-name="layout-IP-006">IP-006 · IP角色家族卡</option>
+<option value="IP-007" data-category="ip-character" data-name="layout-IP-007">IP-007 · IP商业应用卡</option>
+<option value="IP-008" data-category="ip-character" data-name="layout-IP-008">IP-008 · IP角色关系卡</option>
+<option value="IP-009" data-category="ip-character" data-name="layout-IP-009">IP-009 · IP角色一日生活相册</option>
+<option value="IP-010" data-category="ip-character" data-name="layout-IP-010">IP-010 · IP角色社交圈动态卡</option>
+<option value="IP-011" data-category="ip-character" data-name="layout-IP-011">IP-011 · IP角色微信群聊界面卡</option>
+<option value="IP-012" data-category="ip-character" data-name="layout-IP-012">IP-012 · IP角色小红书主页卡</option>
+<option value="IP-013" data-category="ip-character" data-name="layout-IP-013">IP-013 · IP招牌体态与动态力线卡</option></optgroup>
+<optgroup label="电商商品图" data-category="ecommerce" data-name="layout-group-ecommerce"><option value="EC-001" data-category="ecommerce" data-name="layout-EC-001">EC-001 · 单品主图</option>
+<option value="EC-002" data-category="ecommerce" data-name="layout-EC-002">EC-002 · 多角度展示图</option>
+<option value="EC-003" data-category="ecommerce" data-name="layout-EC-003">EC-003 · 细节特写图</option>
+<option value="EC-004" data-category="ecommerce" data-name="layout-EC-004">EC-004 · 包装 / 套装 / 内容物展示图</option>
+<option value="EC-005" data-category="ecommerce" data-name="layout-EC-005">EC-005 · 卖点标注图</option>
+<option value="EC-006" data-category="ecommerce" data-name="layout-EC-006">EC-006 · 功能演示图</option>
+<option value="EC-007" data-category="ecommerce" data-name="layout-EC-007">EC-007 · 参数尺寸图</option>
+<option value="EC-008" data-category="ecommerce" data-name="layout-EC-008">EC-008 · 材质 / 结构解析图</option>
+<option value="EC-009" data-category="ecommerce" data-name="layout-EC-009">EC-009 · 生活方式场景图</option>
+<option value="EC-010" data-category="ecommerce" data-name="layout-EC-010">EC-010 · 人物使用图</option>
+<option value="EC-011" data-category="ecommerce" data-name="layout-EC-011">EC-011 · 多场景适用图</option>
+<option value="EC-012" data-category="ecommerce" data-name="layout-EC-012">EC-012 · 使用步骤 / 教程图</option>
+<option value="EC-013" data-category="ecommerce" data-name="layout-EC-013">EC-013 · 对比优势图</option>
+<option value="EC-014" data-category="ecommerce" data-name="layout-EC-014">EC-014 · 型号 / SKU 差异图</option>
+<option value="EC-015" data-category="ecommerce" data-name="layout-EC-015">EC-015 · 适配 / 选择指南图</option>
+<option value="EC-016" data-category="ecommerce" data-name="layout-EC-016">EC-016 · FAQ / 注意事项图</option>
+<option value="EC-017" data-category="ecommerce" data-name="layout-EC-017">EC-017 · 品质 / 工艺说明图</option>
+<option value="EC-018" data-category="ecommerce" data-name="layout-EC-018">EC-018 · 认证 / 数据证明图</option>
+<option value="EC-019" data-category="ecommerce" data-name="layout-EC-019">EC-019 · 评价 / 口碑图</option>
+<option value="EC-020" data-category="ecommerce" data-name="layout-EC-020">EC-020 · 品牌 / 来源故事图</option>
+<option value="EC-021" data-category="ecommerce" data-name="layout-EC-021">EC-021 · 新品上市图</option>
+<option value="EC-022" data-category="ecommerce" data-name="layout-EC-022">EC-022 · 促销活动图</option>
+<option value="EC-023" data-category="ecommerce" data-name="layout-EC-023">EC-023 · 内容种草 / UGC 图</option>
+<option value="EC-024" data-category="ecommerce" data-name="layout-EC-024">EC-024 · 广告主视觉 / Hero / KV</option></optgroup></select></div>
+        <figure class="reference" data-name="reference-layout">
+  <figcaption data-name="reference-caption-layout">版式参考 · 上游参考，非本次成图</figcaption>
+  <img id="layout-preview" class="reference-img" alt="" hidden data-name="reference-img-layout">
+  <p id="layout-image-loading" class="muted" hidden data-name="reference-loading-layout">参考加载中，可先生成文字…</p>
+  <p id="layout-image-error" class="error" hidden data-name="reference-error-layout">参考未加载成功。</p>
+  <div class="ref-actions" data-name="reference-actions-layout"><a id="download-layout" class="button secondary" aria-disabled="true" data-name="download-layout">下载参考</a><button id="retry-layout" class="button secondary" type="button" hidden data-name="retry-layout">重试</button></div>
+</figure>
+      </div>
+      <div class="visual-card" data-name="style-card">
+        <label for="summary-style" data-name="summary-style-label">当前画风</label>
+        <input id="summary-style" type="text" readonly data-name="summary-style">
+        <button id="change-style" type="button" class="button secondary" data-panel="style" aria-expanded="false" data-name="change-style">换画风</button>
+        <div id="style-panel" hidden data-name="style-panel"><input id="style-search" type="search" placeholder="搜索作者、画风名称或编号" aria-label="搜索画风" data-name="style-search"><select id="style" aria-label="完整画风目录" data-name="style"><optgroup label="FA 国际社论幽默 / Editorial &amp; Humor Doodle" data-name="style-group-FA"><option value="FA-001" data-search="FA-001 Gemma Correll Playful Deadpan Doodle" data-name="style-FA-001">FA-001 · Gemma Correll</option>
+<option value="FA-002" data-search="FA-002 Saul Steinberg Conceptual Continuous-Line Editorial" data-name="style-FA-002">FA-002 · Saul Steinberg</option>
+<option value="FA-003" data-search="FA-003 Jean-Jacques Sempé Fine-Line Urban Miniature" data-name="style-FA-003">FA-003 · Jean-Jacques Sempé</option>
+<option value="FA-004" data-search="FA-004 James Thurber Awkward Minimal Ink Cartoon" data-name="style-FA-004">FA-004 · James Thurber</option>
+<option value="FA-005" data-search="FA-005 Shel Silverstein Childlike Free-Line Humor" data-name="style-FA-005">FA-005 · Shel Silverstein</option>
+<option value="FA-006" data-search="FA-006 Edward Gorey Victorian Crosshatch Gothic Cartoon" data-name="style-FA-006">FA-006 · Edward Gorey</option>
+<option value="FA-007" data-search="FA-007 Ronald Searle Frenetic Scratch-Ink Caricature" data-name="style-FA-007">FA-007 · Ronald Searle</option>
+<option value="FA-008" data-search="FA-008 Roz Chast Nervous Urban Notebook Cartoon" data-name="style-FA-008">FA-008 · Roz Chast</option>
+<option value="FA-009" data-search="FA-009 Lynda Barry Raw Zine Diary Cartoon" data-name="style-FA-009">FA-009 · Lynda Barry</option>
+<option value="FA-010" data-search="FA-010 Tom Gauld Geometric Literary Deadpan" data-name="style-FA-010">FA-010 · Tom Gauld</option>
+<option value="FA-011" data-search="FA-011 David Shrigley Deliberately Bad Absurd Doodle" data-name="style-FA-011">FA-011 · David Shrigley</option>
+<option value="FA-012" data-search="FA-012 Christoph Niemann Minimal Visual-Pun Editorial" data-name="style-FA-012">FA-012 · Christoph Niemann</option>
+<option value="FA-013" data-search="FA-013 Jean Jullien Bold Flat Everyday Satire" data-name="style-FA-013">FA-013 · Jean Jullien</option>
+<option value="FA-014" data-search="FA-014 Mr Bingo Handwritten British Anti-Inspiration Cartoon" data-name="style-FA-014">FA-014 · Mr Bingo</option>
+<option value="FA-015" data-search="FA-015 Brian Rea Soft Relationship Editorial Line Art" data-name="style-FA-015">FA-015 · Brian Rea</option>
+<option value="FA-016" data-search="FA-016 Rubyetc Raw Emotional Internet Doodle" data-name="style-FA-016">FA-016 · Rubyetc</option>
+<option value="FA-017" data-search="FA-017 Sarah Andersen Black-and-White Reaction Diary Cartoon" data-name="style-FA-017">FA-017 · Sarah Andersen</option>
+<option value="FA-018" data-search="FA-018 Poorly Drawn Lines / Reza Farazmand Minimal Deadpan Dialogue Cartoon" data-name="style-FA-018">FA-018 · Poorly Drawn Lines / Reza Farazmand</option>
+<option value="FA-019" data-search="FA-019 The Oatmeal / Matthew Inman Explosive Webcomic Exaggeration" data-name="style-FA-019">FA-019 · The Oatmeal / Matthew Inman</option>
+<option value="FA-020" data-search="FA-020 Allie Brosh Low-Fi Frenzy Cartoon" data-name="style-FA-020">FA-020 · Allie Brosh</option>
+<option value="FA-021" data-search="FA-021 Mari Andrew Watercolor Handwritten Life Notes" data-name="style-FA-021">FA-021 · Mari Andrew</option>
+<option value="FA-022" data-search="FA-022 Sally Nixon Flat Everyday Women Lifestyle" data-name="style-FA-022">FA-022 · Sally Nixon</option>
+<option value="FA-023" data-search="FA-023 Agathe Sorlet Warm Minimal Female Line Cartoon" data-name="style-FA-023">FA-023 · Agathe Sorlet</option>
+<option value="FA-024" data-search="FA-024 Jean-Michel Tixier Geometric Fashion Deadpan" data-name="style-FA-024">FA-024 · Jean-Michel Tixier</option>
+<option value="FA-025" data-search="FA-025 Gary Larson One-Panel Absurd Social Cartoon" data-name="style-FA-025">FA-025 · Gary Larson</option>
+<option value="FA-026" data-search="FA-026 Sergio Aragonés Dense Silent Physical Comedy" data-name="style-FA-026">FA-026 · Sergio Aragonés</option>
+<option value="FA-027" data-search="FA-027 R. Crumb Underground Crosshatched Grotesque Cartoon" data-name="style-FA-027">FA-027 · R. Crumb</option>
+<option value="FA-028" data-search="FA-028 Daniel Clowes Retro Detached American Comic" data-name="style-FA-028">FA-028 · Daniel Clowes</option>
+<option value="FA-029" data-search="FA-029 Chris Ware Geometric Diagrammatic Narrative" data-name="style-FA-029">FA-029 · Chris Ware</option>
+<option value="FA-030" data-search="FA-030 Adrian Tomine Clean Urban Solitude Comic" data-name="style-FA-030">FA-030 · Adrian Tomine</option>
+<option value="FA-031" data-search="FA-031 Marjane Satrapi High-Contrast Black-White Memoir Cartoon" data-name="style-FA-031">FA-031 · Marjane Satrapi</option>
+<option value="FA-032" data-search="FA-032 Joann Sfar Loose French Improvised Ink" data-name="style-FA-032">FA-032 · Joann Sfar</option>
+<option value="FA-033" data-search="FA-033 Charles M. Schulz Minimal Newspaper Comic" data-name="style-FA-033">FA-033 · Charles M. Schulz</option>
+<option value="FA-034" data-search="FA-034 Bill Watterson Elastic Sunday Strip" data-name="style-FA-034">FA-034 · Bill Watterson</option>
+<option value="FA-035" data-search="FA-035 Matt Groening Bold Pop Satire Cartoon" data-name="style-FA-035">FA-035 · Matt Groening</option>
+<option value="FA-036" data-search="FA-036 OscarAI Minimalist Organic Pastel Editorial" data-name="style-FA-036">FA-036 · OscarAI</option>
+<option value="FA-037" data-search="FA-037 Ahmed Chic Urban Editorial Motion Character" data-name="style-FA-037">FA-037 · Ahmed</option>
+<option value="FA-038" data-search="FA-038 James Yeung Minimalist Poetic Sempé Ink Doodle" data-name="style-FA-038">FA-038 · James Yeung</option>
+<option value="FA-039" data-search="FA-039 手绘火柴人漫画 Hand-Drawn Stick Figure Cartoon" data-name="style-FA-039">FA-039 · 手绘火柴人漫画</option>
+<option value="FA-040" data-search="FA-040 极简手绘 Minimalist 2D Hand-Drawn Doodle" data-name="style-FA-040">FA-040 · 极简手绘</option></optgroup>
+<optgroup label="FB 经典绘本叙事 / Picture Book &amp; Watercolor" data-name="style-group-FB"><option value="FB-001" data-search="FB-001 Quentin Blake Loose Ink-and-Wash Storybook" data-name="style-FB-001">FB-001 · Quentin Blake</option>
+<option value="FB-002" data-search="FB-002 Tove Jansson Nordic Fine-Line Whimsy" data-name="style-FB-002">FB-002 · Tove Jansson</option>
+<option value="FB-003" data-search="FB-003 Richard Scarry Busy Anthropomorphic Everyday World" data-name="style-FB-003">FB-003 · Richard Scarry</option>
+<option value="FB-004" data-search="FB-004 Arnold Lobel Warm Vintage Line-and-Wash" data-name="style-FB-004">FB-004 · Arnold Lobel</option>
+<option value="FB-005" data-search="FB-005 Maurice Sendak Crosshatched Wild Storybook" data-name="style-FB-005">FB-005 · Maurice Sendak</option>
+<option value="FB-006" data-search="FB-006 Dr. Seuss Bendy Absurd Storybook" data-name="style-FB-006">FB-006 · Dr. Seuss</option>
+<option value="FB-007" data-search="FB-007 Beatrix Potter Naturalist Watercolor Animal Storybook" data-name="style-FB-007">FB-007 · Beatrix Potter</option>
+<option value="FB-008" data-search="FB-008 E. H. Shepard Classic Pen-and-Light-Wash Storybook" data-name="style-FB-008">FB-008 · E. H. Shepard</option>
+<option value="FB-009" data-search="FB-009 Satoshi Kitamura Quirky Ink-and-Watercolor Tale" data-name="style-FB-009">FB-009 · Satoshi Kitamura</option>
+<option value="FB-010" data-search="FB-010 Oliver Jeffers Minimal Poetic Picturebook Doodle" data-name="style-FB-010">FB-010 · Oliver Jeffers</option>
+<option value="FB-011" data-search="FB-011 Chris Haughton Bold Geometric Picturebook" data-name="style-FB-011">FB-011 · Chris Haughton</option>
+<option value="FB-012" data-search="FB-012 Jon Klassen Muted Deadpan Picturebook" data-name="style-FB-012">FB-012 · Jon Klassen</option>
+<option value="FB-013" data-search="FB-013 Carson Ellis Folk-Line Decorative Storybook" data-name="style-FB-013">FB-013 · Carson Ellis</option>
+<option value="FB-014" data-search="FB-014 Shaun Tan Dreamlike Surreal Storybook" data-name="style-FB-014">FB-014 · Shaun Tan</option>
+<option value="FB-015" data-search="FB-015 Lane Smith Layered Vintage Storybook Collage" data-name="style-FB-015">FB-015 · Lane Smith</option>
+<option value="FB-016" data-search="FB-016 Peter de Sève Expressive Character Sketch Cartoon" data-name="style-FB-016">FB-016 · Peter de Sève</option>
+<option value="FB-017" data-search="FB-017 Jean Giraud / Moebius Dreamlike Clean-Line Sci-Fi Figure" data-name="style-FB-017">FB-017 · Jean Giraud / Moebius</option>
+<option value="FB-018" data-search="FB-018 Hergé European Clear-Line Adventure Figure" data-name="style-FB-018">FB-018 · Hergé</option>
+<option value="FB-019" data-search="FB-019 Joost Swarte Geometric European Clear-Line Figure" data-name="style-FB-019">FB-019 · Joost Swarte</option>
+<option value="FB-020" data-search="FB-020 OscarAI Quirky 60s-70s Retro Storybook Illustration" data-name="style-FB-020">FB-020 · OscarAI</option>
+<option value="FB-021" data-search="FB-021 OscarAI Charming Vintage Storybook Illustration" data-name="style-FB-021">FB-021 · OscarAI</option>
+<option value="FB-022" data-search="FB-022 OscarAI Mid-Century Poetic Ink &amp; Watercolor Storybook" data-name="style-FB-022">FB-022 · OscarAI</option>
+<option value="FB-023" data-search="FB-023 OscarAI Whimsical Watercolor Die-Cut Sticker Cartoon" data-name="style-FB-023">FB-023 · OscarAI</option>
+<option value="FB-024" data-search="FB-024 OscarAI Painterly Gouache Animation Storybook" data-name="style-FB-024">FB-024 · OscarAI</option>
+<option value="FB-025" data-search="FB-025 OscarAI Vintage Ink &amp; Watercolor Comic Storybook" data-name="style-FB-025">FB-025 · OscarAI</option>
+<option value="FB-026" data-search="FB-026 OscarAI Warm Gouache &amp; Colored Pencil Storybook Character" data-name="style-FB-026">FB-026 · OscarAI</option>
+<option value="FB-027" data-search="FB-027 OscarAI Edwardian Vintage Ink Fashion Editorial" data-name="style-FB-027">FB-027 · OscarAI</option>
+<option value="FB-028" data-search="FB-028 OscarAI Loose Ink &amp; Gouache Storybook Studio" data-name="style-FB-028">FB-028 · OscarAI</option>
+<option value="FB-029" data-search="FB-029 儿童蜡笔手绘绘本 Charming Children Crayon Storybook" data-name="style-FB-029">FB-029 · 儿童蜡笔手绘绘本</option>
+<option value="FB-030" data-search="FB-030 なっくす Soft Crayon &amp; Sumi-e Cat Storybook" data-name="style-FB-030">FB-030 · なっくす</option>
+<option value="FB-031" data-search="FB-031 几米 Jimmy Liao Whimsical &amp; Poetic Storybook Watercolor" data-name="style-FB-031">FB-031 · 几米</option>
+<option value="FB-032" data-search="FB-032 yang02010 Minimalist Atmospheric Storybook &amp; Vast Scale Contrast" data-name="style-FB-032">FB-032 · yang02010</option>
+<option value="FB-033" data-search="FB-033 森系儿童插画 Forest Children Storybook Illustration" data-name="style-FB-033">FB-033 · 森系儿童插画</option>
+<option value="FB-034" data-search="FB-034 简笔与半写实融合风 Minimalist Doodle &amp; Semi-Realistic Hybrid Illustration" data-name="style-FB-034">FB-034 · 简笔与半写实融合风</option>
+<option value="FB-035" data-search="FB-035 Charlie Mackesy Charlie Mackesy Expressive Ink &amp; Watercolor Storybook" data-name="style-FB-035">FB-035 · Charlie Mackesy</option>
+<option value="FB-036" data-search="FB-036 Liz Climo Liz Climo Minimal Animal Cartoon Storybook" data-name="style-FB-036">FB-036 · Liz Climo</option>
+<option value="FB-037" data-search="FB-037 Naoko Takagi Naoko Takagi Warm Daily Life Storybook" data-name="style-FB-037">FB-037 · Naoko Takagi</option>
+<option value="FB-038" data-search="FB-038 Yoko Sano Yoko Sano Whimsical Crayon &amp; Watercolor Storybook" data-name="style-FB-038">FB-038 · Yoko Sano</option>
+<option value="FB-039" data-search="FB-039 Emily Hughes Emily Hughes Wild Lush Botanical Storybook" data-name="style-FB-039">FB-039 · Emily Hughes</option>
+<option value="FB-040" data-search="FB-040 Felicita Sala Felicita Sala Cozy Kitchen &amp; Nature Storybook" data-name="style-FB-040">FB-040 · Felicita Sala</option>
+<option value="FB-041" data-search="FB-041 Michael Grejniec Michael Grejniec Textured Paper Watercolor Storybook" data-name="style-FB-041">FB-041 · Michael Grejniec</option>
+<option value="FB-042" data-search="FB-042 Jackie Morris Jackie Morris Luminous Wildlife Watercolor Storybook" data-name="style-FB-042">FB-042 · Jackie Morris</option>
+<option value="FB-043" data-search="FB-043 Manuel Marsol Manuel Marsol Bold Acrylic Cinematic Storybook" data-name="style-FB-043">FB-043 · Manuel Marsol</option>
+<option value="FB-044" data-search="FB-044 Suzy Lee Suzy Lee Expressive Border Charcoal &amp; Watercolor Storybook" data-name="style-FB-044">FB-044 · Suzy Lee</option>
+<option value="FB-045" data-search="FB-045 Komako Sakai Komako Sakai Textured Acrylic &amp; Charcoal Storybook" data-name="style-FB-045">FB-045 · Komako Sakai</option>
+<option value="FB-046" data-search="FB-046 Sydney Smith Sydney Smith Luminous Atmospheric Watercolor Storybook" data-name="style-FB-046">FB-046 · Sydney Smith</option>
+<option value="FB-047" data-search="FB-047 Isabelle Arsenault Isabelle Arsenault Poetic Pencil &amp; Gouache Storybook" data-name="style-FB-047">FB-047 · Isabelle Arsenault</option>
+<option value="FB-048" data-search="FB-048 Júlia Sardà Júlia Sardà Ornate Gothic Whimsical Storybook" data-name="style-FB-048">FB-048 · Júlia Sardà</option>
+<option value="FB-049" data-search="FB-049 Sophie Blackall Sophie Blackall Vintage Chinese Ink &amp; Watercolor Storybook" data-name="style-FB-049">FB-049 · Sophie Blackall</option>
+<option value="FB-050" data-search="FB-050 Katsumi Komagata Katsumi Komagata Minimal Geometric Cut-Paper Storybook" data-name="style-FB-050">FB-050 · Katsumi Komagata</option>
+<option value="FB-051" data-search="FB-051 Kazuo Iwamura Kazuo Iwamura Warm Forest Animals Watercolor Storybook" data-name="style-FB-051">FB-051 · Kazuo Iwamura</option>
+<option value="FB-052" data-search="FB-052 Keiko Sena Keiko Sena Whimsical Collage Paper-Cut Storybook" data-name="style-FB-052">FB-052 · Keiko Sena</option>
+<option value="FB-053" data-search="FB-053 Rotraut Susanne Berner Rotraut Susanne Berner Bustling Wimmelbuch Line &amp; Wash Storybook" data-name="style-FB-053">FB-053 · Rotraut Susanne Berner</option>
+<option value="FB-054" data-search="FB-054 Wolf Erlbruch Wolf Erlbruch Philosophical Collage &amp; Chalk Storybook" data-name="style-FB-054">FB-054 · Wolf Erlbruch</option>
+<option value="FB-055" data-search="FB-055 Peter Sís Peter Sis Intricate Stippled Map &amp; Fantasy Storybook" data-name="style-FB-055">FB-055 · Peter Sís</option>
+<option value="FB-056" data-search="FB-056 Carll Cneut Carll Cneut Ornate Flemish Baroque Gouache Storybook" data-name="style-FB-056">FB-056 · Carll Cneut</option>
+<option value="FB-057" data-search="FB-057 Benjamin Lacombe Benjamin Lacombe Gothic Romantic Gouache Storybook" data-name="style-FB-057">FB-057 · Benjamin Lacombe</option>
+<option value="FB-058" data-search="FB-058 Rébecca Green Rebecca Green Cozy Gouache &amp; Colored Pencil Storybook" data-name="style-FB-058">FB-058 · Rébecca Green</option>
+<option value="FB-059" data-search="FB-059 Marianne Dubuc Marianne Dubuc Gentle Forest Animal Watercolor Storybook" data-name="style-FB-059">FB-059 · Marianne Dubuc</option>
+<option value="FB-060" data-search="FB-060 Marla Frazee Marla Frazee Playful Childlike Pencil &amp; Watercolor Storybook" data-name="style-FB-060">FB-060 · Marla Frazee</option>
+<option value="FB-061" data-search="FB-061 Catarina Sobral Catarina Sobral Bold Geometric Midcentury Graphic Storybook" data-name="style-FB-061">FB-061 · Catarina Sobral</option>
+<option value="FB-062" data-search="FB-062 Violeta Lópiz Violeta Lopiz Poetic Minimal Ink &amp; Botanical Storybook" data-name="style-FB-062">FB-062 · Violeta Lópiz</option>
+<option value="FB-063" data-search="FB-063 Mariachiara Di Giorgio Mariachiara Di Giorgio Luminous Atmospheric Water &amp; Nature Storybook" data-name="style-FB-063">FB-063 · Mariachiara Di Giorgio</option>
+<option value="FB-064" data-search="FB-064 JiHyun Kim JiHyun Kim Deep Ocean Sunlit Watercolor Storybook" data-name="style-FB-064">FB-064 · JiHyun Kim</option>
+<option value="FB-065" data-search="FB-065 蔡皋 Cai Gao Traditional Chinese Folk Warm Storybook" data-name="style-FB-065">FB-065 · 蔡皋</option>
+<option value="FB-066" data-search="FB-066 Aiko Fukawa / 布川爱子 Aiko Fukawa Cozy Domestic Life &amp; Floral Gouache Storybook" data-name="style-FB-066">FB-066 · Aiko Fukawa / 布川爱子</option></optgroup>
+<optgroup label="FC 现代平面艺术 / Modern Graphic &amp; Pop" data-name="style-group-FC"><option value="FC-001" data-search="FC-001 Jon Burgerman Chaotic Color Doodle Crowd" data-name="style-FC-001">FC-001 · Jon Burgerman</option>
+<option value="FC-002" data-search="FC-002 Hattie Stewart Pop Magazine Doodle Overlay" data-name="style-FC-002">FC-002 · Hattie Stewart</option>
+<option value="FC-003" data-search="FC-003 Andy Rementer Retro Geometric City Cartoon" data-name="style-FC-003">FC-003 · Andy Rementer</option>
+<option value="FC-004" data-search="FC-004 Olimpia Zagnoli Minimal Bold-Color Fashion Geometry" data-name="style-FC-004">FC-004 · Olimpia Zagnoli</option>
+<option value="FC-005" data-search="FC-005 Malika Favre High-Contrast Negative-Space Figure" data-name="style-FC-005">FC-005 · Malika Favre</option>
+<option value="FC-006" data-search="FC-006 Noma Bar Negative-Space Visual-Pun Graphic" data-name="style-FC-006">FC-006 · Noma Bar</option>
+<option value="FC-007" data-search="FC-007 Mary Blair Midcentury Geometric Fairytale" data-name="style-FC-007">FC-007 · Mary Blair</option>
+<option value="FC-008" data-search="FC-008 Charley Harper Ultra-Geometric Nature Character" data-name="style-FC-008">FC-008 · Charley Harper</option>
+<option value="FC-009" data-search="FC-009 Saul Bass Rough Cut-Paper Modernist Graphic" data-name="style-FC-009">FC-009 · Saul Bass</option>
+<option value="FC-010" data-search="FC-010 Paul Rand Playful Modernist Collage Character" data-name="style-FC-010">FC-010 · Paul Rand</option>
+<option value="FC-011" data-search="FC-011 Milton Glaser Retro Pop Editorial Figure" data-name="style-FC-011">FC-011 · Milton Glaser</option>
+<option value="FC-012" data-search="FC-012 Seymour Chwast Bold Retro Advertising Cartoon" data-name="style-FC-012">FC-012 · Seymour Chwast</option>
+<option value="FC-013" data-search="FC-013 Push Pin Studios Decorative Retro Commercial Illustration" data-name="style-FC-013">FC-013 · Push Pin Studios</option>
+<option value="FC-014" data-search="FC-014 Henri Matisse cut-outs Freeform Cut-Paper Figure" data-name="style-FC-014">FC-014 · Henri Matisse cut-outs</option>
+<option value="FC-015" data-search="FC-015 Jean Cocteau line drawing Poetic Single-Line Figure" data-name="style-FC-015">FC-015 · Jean Cocteau line drawing</option>
+<option value="FC-016" data-search="FC-016 Pablo Picasso line drawings Abstract Continuous-Line Figure" data-name="style-FC-016">FC-016 · Pablo Picasso line drawings</option>
+<option value="FC-017" data-search="FC-017 Keith Haring Bold Kinetic Street-Pictogram" data-name="style-FC-017">FC-017 · Keith Haring</option>
+<option value="FC-018" data-search="FC-018 Jean-Michel Basquiat Raw Symbolic Graffiti Figure" data-name="style-FC-018">FC-018 · Jean-Michel Basquiat</option>
+<option value="FC-019" data-search="FC-019 Raymond Pettibon Punk Ink-and-Text Editorial" data-name="style-FC-019">FC-019 · Raymond Pettibon</option>
+<option value="FC-020" data-search="FC-020 George Condo drawing Grotesque Classical-Comic Portrait" data-name="style-FC-020">FC-020 · George Condo drawing</option>
+<option value="FC-021" data-search="FC-021 Henri de Toulouse-Lautrec Flat Belle-Époque Poster Figure" data-name="style-FC-021">FC-021 · Henri de Toulouse-Lautrec</option>
+<option value="FC-022" data-search="FC-022 Egon Schiele drawing Angular Expressive Figure Line" data-name="style-FC-022">FC-022 · Egon Schiele drawing</option>
+<option value="FC-023" data-search="FC-023 Jean Dubuffet Raw Art-Brut Figure" data-name="style-FC-023">FC-023 · Jean Dubuffet</option>
+<option value="FC-024" data-search="FC-024 Paul Klee Poetic Geometric Symbol Figure" data-name="style-FC-024">FC-024 · Paul Klee</option>
+<option value="FC-025" data-search="FC-025 Joan Miró Biomorphic Symbolic Character" data-name="style-FC-025">FC-025 · Joan Miró</option>
+<option value="FC-026" data-search="FC-026 Alexander Calder drawings Fluid Single-Line Motion Figure" data-name="style-FC-026">FC-026 · Alexander Calder drawings</option>
+<option value="FC-027" data-search="FC-027 Tom Haugomat Cinematic Grainy Flat-Shape Illustration" data-name="style-FC-027">FC-027 · Tom Haugomat</option>
+<option value="FC-028" data-search="FC-028 Blexbolex Retro Silkscreen Geometric Figure" data-name="style-FC-028">FC-028 · Blexbolex</option>
+<option value="FC-029" data-search="FC-029 清透扁平插画 Clean Airy Flat Vector Illustration" data-name="style-FC-029">FC-029 · 清透扁平插画</option>
+<option value="FC-030" data-search="FC-030 扁平几何气刷颗粒插画 Flat Geometric Airbrush Grain Illustration" data-name="style-FC-030">FC-030 · 扁平几何气刷颗粒插画</option>
+<option value="FC-031" data-search="FC-031 美式现代复古橡皮管卡通插画 Modern Retro Rubber-Hose Cartoon Illustration" data-name="style-FC-031">FC-031 · 美式现代复古橡皮管卡通插画</option>
+<option value="FC-032" data-search="FC-032 阿尔丰斯·穆夏 / Alphonse Mucha Alphonse Mucha Art Nouveau Illustration" data-name="style-FC-032">FC-032 · 阿尔丰斯·穆夏 / Alphonse Mucha</option></optgroup>
+<optgroup label="FD 日本当代插画 / Japanese Contemporary &amp; Manga" data-name="style-group-FD"><option value="FD-001" data-search="FD-001 Yuko Shimizu Dynamic East-Asian Ink Editorial" data-name="style-FD-001">FD-001 · Yuko Shimizu</option>
+<option value="FD-002" data-search="FD-002 Tatsuro Kiuchi Quiet Low-Saturation Japanese Editorial" data-name="style-FD-002">FD-002 · Tatsuro Kiuchi</option>
+<option value="FD-003" data-search="FD-003 Yu Nagaba Minimal Fashion Line Figure" data-name="style-FD-003">FD-003 · Yu Nagaba</option>
+<option value="FD-004" data-search="FD-004 Noritake Cool Minimal Black-and-White Figure" data-name="style-FD-004">FD-004 · Noritake</option>
+<option value="FD-005" data-search="FD-005 Ryohei Yanagihara Showa Retro Commercial Cartoon" data-name="style-FD-005">FD-005 · Ryohei Yanagihara</option>
+<option value="FD-006" data-search="FD-006 Chihiro Iwasaki Airy Transparent Watercolor Figure" data-name="style-FD-006">FD-006 · Chihiro Iwasaki</option>
+<option value="FD-007" data-search="FD-007 Machiko Hasegawa Showa Everyday Family Comic" data-name="style-FD-007">FD-007 · Machiko Hasegawa</option>
+<option value="FD-008" data-search="FD-008 Shigeru Mizuki Folklore Monster Ink Cartoon" data-name="style-FD-008">FD-008 · Shigeru Mizuki</option>
+<option value="FD-009" data-search="FD-009 Osamu Tezuka Classic Rounded Manga Character" data-name="style-FD-009">FD-009 · Osamu Tezuka</option>
+<option value="FD-010" data-search="FD-010 Yoshitomo Nara Rebellious Big-Head Deadpan Figure" data-name="style-FD-010">FD-010 · Yoshitomo Nara</option>
+<option value="FD-011" data-search="FD-011 Hisashi Eguchi 80s Clean-Line Urban Pop Girl" data-name="style-FD-011">FD-011 · Hisashi Eguchi</option>
+<option value="FD-012" data-search="FD-012 Yuko Higuchi Ornate Strange Botanical Ink" data-name="style-FD-012">FD-012 · Yuko Higuchi</option>
+<option value="FD-013" data-search="FD-013 きくちあつこ Fashion Diary Sketch Girl" data-name="style-FD-013">FD-013 · きくちあつこ</option>
+<option value="FD-014" data-search="FD-014 しまだなな Loose Deadpan Everyday Sketch" data-name="style-FD-014">FD-014 · しまだなな</option>
+<option value="FD-015" data-search="FD-015 のなか海 Yuru-Surreal Minimal Everyday Cartoon" data-name="style-FD-015">FD-015 · のなか海</option>
+<option value="FD-016" data-search="FD-016 tomatomayu Notebook Lifestyle Doodle" data-name="style-FD-016">FD-016 · tomatomayu</option>
+<option value="FD-017" data-search="FD-017 鈴芽とろ Cute Essay-Manga Everyday" data-name="style-FD-017">FD-017 · 鈴芽とろ</option>
+<option value="FD-018" data-search="FD-018 うめじろう Rough Gag-Manga Reaction" data-name="style-FD-018">FD-018 · うめじろう</option>
+<option value="FD-019" data-search="FD-019 ASUMINA Clean Young-Lifestyle Manga Line" data-name="style-FD-019">FD-019 · ASUMINA</option>
+<option value="FD-020" data-search="FD-020 モチダちひろ Friendly Girl-Diary Cartoon" data-name="style-FD-020">FD-020 · モチダちひろ</option>
+<option value="FD-021" data-search="FD-021 YAGI Minimal Absurd Short-Gag Cartoon" data-name="style-FD-021">FD-021 · YAGI</option>
+<option value="FD-022" data-search="FD-022 むらたさき Warm Slightly-Strange Everyday Line" data-name="style-FD-022">FD-022 · むらたさき</option>
+<option value="FD-023" data-search="FD-023 よこみねさやか Fast Family-Essay Sketch" data-name="style-FD-023">FD-023 · よこみねさやか</option>
+<option value="FD-024" data-search="FD-024 おべとも Minimal Quirky Motion Character" data-name="style-FD-024">FD-024 · おべとも</option>
+<option value="FD-025" data-search="FD-025 そとこ / Sotoko Elegant Sparse-Line Girl" data-name="style-FD-025">FD-025 · そとこ / Sotoko</option>
+<option value="FD-026" data-search="FD-026 yasuna Delicate Emotional Female Line" data-name="style-FD-026">FD-026 · yasuna</option>
+<option value="FD-027" data-search="FD-027 オガワナツミ Pop-Culture Minimal Figure" data-name="style-FD-027">FD-027 · オガワナツミ</option>
+<option value="FD-028" data-search="FD-028 Mira Lou Modern Editorial Female Line" data-name="style-FD-028">FD-028 · Mira Lou</option>
+<option value="FD-029" data-search="FD-029 ソウノナホ Soft Magazine Line-and-Wash" data-name="style-FD-029">FD-029 · ソウノナホ</option>
+<option value="FD-030" data-search="FD-030 Appy Minimal Daily-Life Girl Line" data-name="style-FD-030">FD-030 · Appy</option>
+<option value="FD-031" data-search="FD-031 reism・i Transparent Watercolor Magazine Figure" data-name="style-FD-031">FD-031 · reism・i</option>
+<option value="FD-032" data-search="FD-032 北澤平祐 Playful Marker Fairytale Character" data-name="style-FD-032">FD-032 · 北澤平祐</option>
+<option value="FD-033" data-search="FD-033 白根ゆたんぽ Loose Pop Advertising Girl" data-name="style-FD-033">FD-033 · 白根ゆたんぽ</option>
+<option value="FD-034" data-search="FD-034 藍にいな / Ai Niina Transparent Emotional Youth Illustration" data-name="style-FD-034">FD-034 · 藍にいな / Ai Niina</option>
+<option value="FD-035" data-search="FD-035 山中玲奈 Warm Lifestyle Magazine Figure" data-name="style-FD-035">FD-035 · 山中玲奈</option>
+<option value="FD-036" data-search="FD-036 はまふぐ Soft Empathy Social Comic" data-name="style-FD-036">FD-036 · はまふぐ</option>
+<option value="FD-037" data-search="FD-037 Nah High-Saturation Gen-Z Fashion Girl" data-name="style-FD-037">FD-037 · Nah</option>
+<option value="FD-038" data-search="FD-038 misato. Soft Dreamy Animated Illustration" data-name="style-FD-038">FD-038 · misato.</option>
+<option value="FD-039" data-search="FD-039 min² Pastel Yami-Kawaii Girly" data-name="style-FD-039">FD-039 · min²</option>
+<option value="FD-040" data-search="FD-040 A.YAMI Tokyo Street Graphic Girl" data-name="style-FD-040">FD-040 · A.YAMI</option>
+<option value="FD-041" data-search="FD-041 めめんち Mystic Fashion Character Graphic" data-name="style-FD-041">FD-041 · めめんち</option>
+<option value="FD-042" data-search="FD-042 日系超萌1.5头身Q版 Japanese Kawaii Mini Chibi 2D Illustration" data-name="style-FD-042">FD-042 · 日系超萌1.5头身Q版</option></optgroup>
+<optgroup label="FE 新国风与传统工艺 / Chinese Traditional &amp; Folk Craft" data-name="style-group-FE"><option value="FE-001" data-search="FE-001 卤猫 Gentle Nature Dreambook Illustration" data-name="style-FE-001">FE-001 · 卤猫</option>
+<option value="FE-002" data-search="FE-002 Tango / 高幼军 Minimal Black-White Visual-Pun Cartoon" data-name="style-FE-002">FE-002 · Tango / 高幼军</option>
+<option value="FE-003" data-search="FE-003 呼葱觅蒜 Elongated New-Chinese Minimal Figure" data-name="style-FE-003">FE-003 · 呼葱觅蒜</option>
+<option value="FE-004" data-search="FE-004 Victo Ngai / 倪传婧 Dense East-Asian Fantasy Editorial" data-name="style-FE-004">FE-004 · Victo Ngai / 倪传婧</option>
+<option value="FE-005" data-search="FE-005 Oamul Lu Seasonal Travel Watercolor Diary" data-name="style-FE-005">FE-005 · Oamul Lu</option>
+<option value="FE-006" data-search="FE-006 吴和平 Luo Blue-Orange Grainy Chinese Editorial" data-name="style-FE-006">FE-006 · 吴和平 Luo</option>
+<option value="FE-007" data-search="FE-007 方块阿兽 Cinematic Saturated Story Illustration" data-name="style-FE-007">FE-007 · 方块阿兽</option>
+<option value="FE-008" data-search="FE-008 特浓 TN Modern New-Guofeng Flat-Line Illustration" data-name="style-FE-008">FE-008 · 特浓 TN</option>
+<option value="FE-009" data-search="FE-009 奇舫社 Decorative Guochao Character Illustration" data-name="style-FE-009">FE-009 · 奇舫社</option>
+<option value="FE-010" data-search="FE-010 唐意 TY Ornate Flowing Eastern Fantasy Figure" data-name="style-FE-010">FE-010 · 唐意 TY</option>
+<option value="FE-011" data-search="FE-011 CAA 陈思佚 Soft Chinese Watercolor Atmosphere" data-name="style-FE-011">FE-011 · CAA 陈思佚</option>
+<option value="FE-012" data-search="FE-012 李旻 Contemporary Chinese Cultural Editorial" data-name="style-FE-012">FE-012 · 李旻</option>
+<option value="FE-013" data-search="FE-013 伊吹五月 Freehand Ink-Wash Ancient Figure" data-name="style-FE-013">FE-013 · 伊吹五月</option>
+<option value="FE-014" data-search="FE-014 早稻 ZAODAO Wild Ink Eastern Weirdness" data-name="style-FE-014">FE-014 · 早稻 ZAODAO</option>
+<option value="FE-015" data-search="FE-015 眠狼 Elegant Soft Ink Ancient Figure" data-name="style-FE-015">FE-015 · 眠狼</option>
+<option value="FE-016" data-search="FE-016 loli武士 Refined Eastern Line-Art Character" data-name="style-FE-016">FE-016 · loli武士</option>
+<option value="FE-017" data-search="FE-017 古戈力 Modern Eastern Fantasy Character" data-name="style-FE-017">FE-017 · 古戈力</option>
+<option value="FE-018" data-search="FE-018 夏达 Elegant Historical Manga Line" data-name="style-FE-018">FE-018 · 夏达</option>
+<option value="FE-019" data-search="FE-019 黑色禁药 Ornate Dark-Fantasy Figure" data-name="style-FE-019">FE-019 · 黑色禁药</option>
+<option value="FE-020" data-search="FE-020 杉泽 Mythic Bestiary Ink Character" data-name="style-FE-020">FE-020 · 杉泽</option>
+<option value="FE-021" data-search="FE-021 Lost7 Blue-Gray Dream Narrative Figure" data-name="style-FE-021">FE-021 · Lost7</option>
+<option value="FE-022" data-search="FE-022 牛轰轰 Expressive Girl-Life Internet Comic" data-name="style-FE-022">FE-022 · 牛轰轰</option>
+<option value="FE-023" data-search="FE-023 郭斯特 Minimal Youth Emotion Comic" data-name="style-FE-023">FE-023 · 郭斯特</option>
+<option value="FE-024" data-search="FE-024 几米 / Jimmy Liao Poetic Urban Dreambook Illustration" data-name="style-FE-024">FE-024 · 几米 / Jimmy Liao</option>
+<option value="FE-025" data-search="FE-025 朱德庸 Minimal Adult Relationship Satire" data-name="style-FE-025">FE-025 · 朱德庸</option>
+<option value="FE-026" data-search="FE-026 阿梗 Delicate Eastern Female Comic" data-name="style-FE-026">FE-026 · 阿梗</option>
+<option value="FE-027" data-search="FE-027 寂地 Dreamy Youth Picturebook Color" data-name="style-FE-027">FE-027 · 寂地</option>
+<option value="FE-028" data-search="FE-028 伟大的安妮 Internet Girl-Life Story Comic" data-name="style-FE-028">FE-028 · 伟大的安妮</option>
+<option value="FE-029" data-search="FE-029 使徒子 Fast-Paced Chinese Meme Comic" data-name="style-FE-029">FE-029 · 使徒子</option>
+<option value="FE-030" data-search="FE-030 Golo 高佬 Free-Line Urban Youth Comic" data-name="style-FE-030">FE-030 · Golo 高佬</option>
+<option value="FE-031" data-search="FE-031 插画师卷耳 Contemporary Urban-Tech Character Illustration" data-name="style-FE-031">FE-031 · 插画师卷耳</option>
+<option value="FE-032" data-search="FE-032 阿梗 Delicate Youth Narrative Comic" data-name="style-FE-032">FE-032 · 阿梗</option>
+<option value="FE-033" data-search="FE-033 寂地 Dreamy Emotional Picturebook Comic" data-name="style-FE-033">FE-033 · 寂地</option>
+<option value="FE-034" data-search="FE-034 夏达 Classical Chinese Fine-Line Manga" data-name="style-FE-034">FE-034 · 夏达</option>
+<option value="FE-035" data-search="FE-035 呼葱觅蒜 Faceless New-Chinese Figure Illustration" data-name="style-FE-035">FE-035 · 呼葱觅蒜</option>
+<option value="FE-036" data-search="FE-036 白茶 Chinese Pet Deadpan Cartoon" data-name="style-FE-036">FE-036 · 白茶</option>
+<option value="FE-037" data-search="FE-037 慕容引刀 Philosophical Minimal Dog Cartoon" data-name="style-FE-037">FE-037 · 慕容引刀</option>
+<option value="FE-038" data-search="FE-038 Tango Minimal Visual-Pun Cartoon" data-name="style-FE-038">FE-038 · Tango</option>
+<option value="FE-039" data-search="FE-039 黄海 Conceptual Eastern Film Poster Design" data-name="style-FE-039">FE-039 · 黄海</option>
+<option value="FE-040" data-search="FE-040 张旺 Digital Chinese Gongbi Fantasy" data-name="style-FE-040">FE-040 · 张旺</option>
+<option value="FE-041" data-search="FE-041 熊亮 Contemporary Chinese Ink Picturebook" data-name="style-FE-041">FE-041 · 熊亮</option>
+<option value="FE-042" data-search="FE-042 早稻 Wild Chinese Ink Fantasy Comic" data-name="style-FE-042">FE-042 · 早稻</option>
+<option value="FE-043" data-search="FE-043 门小雷 Hong Kong Urban Female Comic Illustration" data-name="style-FE-043">FE-043 · 门小雷</option>
+<option value="FE-044" data-search="FE-044 卤猫 Gentle Seasonal Nature Illustration" data-name="style-FE-044">FE-044 · 卤猫</option>
+<option value="FE-045" data-search="FE-045 天朝羽 Warm Nostalgic Everyday Picturebook" data-name="style-FE-045">FE-045 · 天朝羽</option>
+<option value="FE-046" data-search="FE-046 左手韩 Realistic Absurdist Webcomic" data-name="style-FE-046">FE-046 · 左手韩</option>
+<option value="FE-047" data-search="FE-047 聂峻 Beijing Hutong Watercolor Graphic Novel" data-name="style-FE-047">FE-047 · 聂峻</option>
+<option value="FE-048" data-search="FE-048 中式复古连环画 Chinese Retro Lianhuanhua" data-name="style-FE-048">FE-048 · 中式复古连环画</option>
+<option value="FE-049" data-search="FE-049 新国潮工笔扁平 New-Guochao Flat Gongbi" data-name="style-FE-049">FE-049 · 新国潮工笔扁平</option>
+<option value="FE-050" data-search="FE-050 敦煌新插画 Modern Dunhuang Illustration" data-name="style-FE-050">FE-050 · 敦煌新插画</option>
+<option value="FE-051" data-search="FE-051 宋画淡彩现代化 Modernized Song-Dynasty Light Color" data-name="style-FE-051">FE-051 · 宋画淡彩现代化</option>
+<option value="FE-052" data-search="FE-052 新中式水墨小人 New-Chinese Tiny Ink Figures" data-name="style-FE-052">FE-052 · 新中式水墨小人</option>
+<option value="FE-053" data-search="FE-053 广式早茶国潮 Cantonese Dim-Sum Guochao" data-name="style-FE-053">FE-053 · 广式早茶国潮</option>
+<option value="FE-054" data-search="FE-054 海派月份牌 Retro Shanghai Calendar-Poster Retro" data-name="style-FE-054">FE-054 · 海派月份牌 Retro</option>
+<option value="FE-055" data-search="FE-055 民国广告画再设计 Republic-Era Advertising Redesign" data-name="style-FE-055">FE-055 · 民国广告画再设计</option>
+<option value="FE-056" data-search="FE-056 素漆螺钿插画风 Pale Lacquer &amp; Raden Decorative Illustration" data-name="style-FE-056">FE-056 · 素漆螺钿插画风</option>
+<option value="FE-057" data-search="FE-057 当代戏曲漫画插画风 Contemporary Peking Opera Comic Illustration" data-name="style-FE-057">FE-057 · 当代戏曲漫画插画风</option>
+<option value="FE-058" data-search="FE-058 丰子恺 Feng Zikai Literati Brushwork &amp; Whimsical Ink Sketch" data-name="style-FE-058">FE-058 · 丰子恺</option>
+<option value="FE-059" data-search="FE-059 中国奇谭·鹅鹅鹅 Airy Chinese Ink Fantasy Animation" data-name="style-FE-059">FE-059 · 中国奇谭·鹅鹅鹅</option>
+<option value="FE-060" data-search="FE-060 小林漫画 Kobayashi Manga Minimal Ink Style" data-name="style-FE-060">FE-060 · 小林漫画</option>
+<option value="FE-061" data-search="FE-061 当代人文水墨漫画 Contemporary Literati Ink Cartoon" data-name="style-FE-061">FE-061 · 当代人文水墨漫画</option>
+<option value="FE-062" data-search="FE-062 社会主义现实主义宣传画 Socialist Realist Propaganda Poster" data-name="style-FE-062">FE-062 · 社会主义现实主义宣传画</option>
+<option value="FE-063" data-search="FE-063 中国农民画 Chinese Farmers Painting" data-name="style-FE-063">FE-063 · 中国农民画</option>
+<option value="FE-064" data-search="FE-064 八九十年代中国课本插图风 1980s-1990s Chinese Textbook Illustration" data-name="style-FE-064">FE-064 · 八九十年代中国课本插图风</option>
+<option value="FE-065" data-search="FE-065 中国老式手工木偶定格动画风 Vintage Chinese Handmade Puppet Stop-Motion Animation" data-name="style-FE-065">FE-065 · 中国老式手工木偶定格动画风</option>
+<option value="FE-066" data-search="FE-066 尘世梦影·彩绘红楼梦 Dreams of the Mortal World: Red Chamber Color Illustration" data-name="style-FE-066">FE-066 · 尘世梦影·彩绘红楼梦</option>
+<option value="FE-067" data-search="FE-067 天书奇谭 The Legend of Sealed Book Animation Style" data-name="style-FE-067">FE-067 · 天书奇谭</option>
+<option value="FE-068" data-search="FE-068 唐山皮影 Tangshan Shadow Puppet" data-name="style-FE-068">FE-068 · 唐山皮影</option></optgroup>
+<optgroup label="FF 3D黏土毛毡与纸雕 / 3D Clay, Felt &amp; Papercraft" data-name="style-group-FF"><option value="FF-001" data-search="FF-001 OscarAI Stylized 3D Cartoon Personality" data-name="style-FF-001">FF-001 · OscarAI</option>
+<option value="FF-002" data-search="FF-002 OscarAI Stylized Graphic 2D Animation Character" data-name="style-FF-002">FF-002 · OscarAI</option>
+<option value="FF-003" data-search="FF-003 OscarAI Tactile Felt &amp; Knitted 3D Puppet" data-name="style-FF-003">FF-003 · OscarAI</option>
+<option value="FF-004" data-search="FF-004 OscarAI Retro 70s Tactile Wool &amp; Clay Stop-Motion Puppet" data-name="style-FF-004">FF-004 · OscarAI</option>
+<option value="FF-005" data-search="FF-005 OscarAI Textured Cut-Paper Collage Storybook" data-name="style-FF-005">FF-005 · OscarAI</option>
+<option value="FF-006" data-search="FF-006 Ahmed Deadpan Stylized 3D Urban Character" data-name="style-FF-006">FF-006 · Ahmed</option>
+<option value="FF-007" data-search="FF-007 OscarAI Scandinavian Folk-Art Naive Storybook" data-name="style-FF-007">FF-007 · OscarAI</option>
+<option value="FF-008" data-search="FF-008 OscarAI Fuzzy Plush Toy 3D Character" data-name="style-FF-008">FF-008 · OscarAI</option>
+<option value="FF-009" data-search="FF-009 OscarAI Chunky Knit Mohair Stop-Motion Puppet" data-name="style-FF-009">FF-009 · OscarAI</option>
+<option value="FF-010" data-search="FF-010 OscarAI Stylized 3D Animation Feature Character" data-name="style-FF-010">FF-010 · OscarAI</option>
+<option value="FF-011" data-search="FF-011 OscarAI Chubby Pastel Knitted Toy 3D Character" data-name="style-FF-011">FF-011 · OscarAI</option>
+<option value="FF-012" data-search="FF-012 OscarAI Tactile Soft 3D Claymation &amp; Storybook Character" data-name="style-FF-012">FF-012 · OscarAI</option>
+<option value="FF-013" data-search="FF-013 OscarAI Tactile Papercraft &amp; Fabric 3D Cartoon" data-name="style-FF-013">FF-013 · OscarAI</option>
+<option value="FF-014" data-search="FF-014 OscarAI Charming 2D Animation Feature Character Visdev" data-name="style-FF-014">FF-014 · OscarAI</option>
+<option value="FF-015" data-search="FF-015 纸雕 Paper Sculpture Illustration" data-name="style-FF-015">FF-015 · 纸雕</option>
+<option value="FF-016" data-search="FF-016 手撕纸拼贴风 Hand-Torn Paper Collage Illustration" data-name="style-FF-016">FF-016 · 手撕纸拼贴风</option>
+<option value="FF-017" data-search="FF-017 VOX 折纸3D立体拼贴动画 Vox 3D Origami Collage Animation" data-name="style-FF-017">FF-017 · VOX 折纸3D立体拼贴动画</option>
+<option value="FF-018" data-search="FF-018 低多边形艺术 Low Poly Art" data-name="style-FF-018">FF-018 · 低多边形艺术</option>
+<option value="FF-019" data-search="FF-019 超现实 3D 卡通肖像 Hyperreal 3D Cartoon Portrait" data-name="style-FF-019">FF-019 · 超现实 3D 卡通肖像</option></optgroup>
+<optgroup label="FG 动漫和赛璐璐 / Anime, Cel Animation &amp; Retro Game" data-name="style-group-FG"><option value="FG-001" data-search="FG-001 OscarAI Late-80s Cyberpunk Dark OVA Cel Anime" data-name="style-FG-001">FG-001 · OscarAI</option>
+<option value="FG-002" data-search="FG-002 OscarAI Classic 60s-70s Xerox Cel Animation" data-name="style-FG-002">FG-002 · OscarAI</option>
+<option value="FG-003" data-search="FG-003 OscarAI Classic 80s-90s Heroic Fantasy Cel Anime" data-name="style-FG-003">FG-003 · OscarAI</option>
+<option value="FG-004" data-search="FG-004 OscarAI Vintage 70s European Comic Animation Cel" data-name="style-FG-004">FG-004 · OscarAI</option>
+<option value="FG-005" data-search="FG-005 OscarAI Modern Cinematic 2D Character Animation" data-name="style-FG-005">FG-005 · OscarAI</option>
+<option value="FG-006" data-search="FG-006 Shinyi Stylized Cinematic Action-Comedy Character" data-name="style-FG-006">FG-006 · Shinyi</option>
+<option value="FG-007" data-search="FG-007 South Park South Park Animation Style" data-name="style-FG-007">FG-007 · South Park</option>
+<option value="FG-008" data-search="FG-008 Patapon Remastered Patapon Remastered" data-name="style-FG-008">FG-008 · Patapon Remastered</option>
+<option value="FG-009" data-search="FG-009 Don’t Starve Don't Starve Animation Style" data-name="style-FG-009">FG-009 · Don’t Starve</option>
+<option value="FG-010" data-search="FG-010 Cartoon Saloon Cartoon Saloon Animation Style" data-name="style-FG-010">FG-010 · Cartoon Saloon</option>
+<option value="FG-011" data-search="FG-011 黑白恐怖漫画 Black and White Horror Manga Style" data-name="style-FG-011">FG-011 · 黑白恐怖漫画</option>
+<option value="FG-012" data-search="FG-012 久保带人《BLEACH》 Tite Kubo Bleach Manga Style" data-name="style-FG-012">FG-012 · 久保带人《BLEACH》</option>
+<option value="FG-013" data-search="FG-013 藤本树《电锯人》 Tatsuki Fujimoto Chainsaw Man Manga Style" data-name="style-FG-013">FG-013 · 藤本树《电锯人》</option>
+<option value="FG-014" data-search="FG-014 芥见下下《咒术回战》 Gege Akutami Jujutsu Kaisen Manga Style" data-name="style-FG-014">FG-014 · 芥见下下《咒术回战》</option>
+<option value="FG-015" data-search="FG-015 岸本齐史《火影忍者》 Masashi Kishimoto Naruto Manga Style" data-name="style-FG-015">FG-015 · 岸本齐史《火影忍者》</option>
+<option value="FG-016" data-search="FG-016 尾田荣一郎《海贼王》 Eiichiro Oda One Piece Manga Style" data-name="style-FG-016">FG-016 · 尾田荣一郎《海贼王》</option>
+<option value="FG-017" data-search="FG-017 吉卜力 / Studio Ghibli Studio Ghibli Nostalgic Hand-Drawn Cel Anime &amp; Painterly Landscape" data-name="style-FG-017">FG-017 · 吉卜力 / Studio Ghibli</option>
+<option value="FG-018" data-search="FG-018 小疯映画《刺客伍六七》 / Scissor Seven (Sharefun Studio) Scissor Seven Season 1 Anime Style, Simple Composition, Highly Generalized Character Design" data-name="style-FG-018">FG-018 · 小疯映画《刺客伍六七》 / Scissor Seven (Sharefun Studio)</option>
+<option value="FG-019" data-search="FG-019 高饱和电影感美漫插画 / Cinematic American Comic Illustration Cinematic American Comic Illustration, Expressive Anime Emotion, Digital Impasto" data-name="style-FG-019">FG-019 · 高饱和电影感美漫插画 / Cinematic American Comic Illustration</option>
+<option value="FG-020" data-search="FG-020 复古青年漫画与美式叙事插画 / Retro Seinen Manga &amp; American Narrative Illustration Retro Seinen Manga Line Art, American Narrative Illustration, Digital Cel Shading" data-name="style-FG-020">FG-020 · 复古青年漫画与美式叙事插画 / Retro Seinen Manga &amp; American Narrative Illustration</option>
+<option value="FG-021" data-search="FG-021 韩漫webtoon / Korean Webtoon Korean Webtoon" data-name="style-FG-021">FG-021 · 韩漫webtoon / Korean Webtoon</option>
+<option value="FG-022" data-search="FG-022 动画片《蜘蛛侠：平行宇宙》 / Spider-Man: Into the Spider-Verse Spider-Man: Into the Spider-Verse Animation Style" data-name="style-FG-022">FG-022 · 动画片《蜘蛛侠：平行宇宙》 / Spider-Man: Into the Spider-Verse</option>
+<option value="FG-023" data-search="FG-023 复古日系赛璐璐与韩系情绪动画 / Retro 90s Cel Anime &amp; Korean Mood Webtoon Retro 90s Cel Anime &amp; Korean Emotional Webtoon Illustration, Grainy Nostalgic Film Aesthetic" data-name="style-FG-023">FG-023 · 复古日系赛璐璐与韩系情绪动画 / Retro 90s Cel Anime &amp; Korean Mood Webtoon</option>
+<option value="FG-024" data-search="FG-024 新海诚《你的名字。》 / Makoto Shinkai Your Name Makoto Shinkai Your Name" data-name="style-FG-024">FG-024 · 新海诚《你的名字。》 / Makoto Shinkai Your Name</option>
+<option value="FG-025" data-search="FG-025 拼豆像素画 Perler Bead Pixel Art" data-name="style-FG-025">FG-025 · 拼豆像素画</option></optgroup>
+<optgroup label="FH 先锋实验与综合媒介 / Mixed Media &amp; Impasto Arts" data-name="style-group-FH"><option value="FH-001" data-search="FH-001 Editorial Doodle / 社论涂鸦 Editorial Doodle" data-name="style-FH-001">FH-001 · Editorial Doodle / 社论涂鸦</option>
+<option value="FH-002" data-search="FH-002 Loose Ink / 松散墨线 Loose Ink" data-name="style-FH-002">FH-002 · Loose Ink / 松散墨线</option>
+<option value="FH-003" data-search="FH-003 Conceptual Line Drawing / 概念线描 Conceptual Line Drawing" data-name="style-FH-003">FH-003 · Conceptual Line Drawing / 概念线描</option>
+<option value="FH-004" data-search="FH-004 New Yorker 单格社论漫画 Classic Magazine Single-Panel Cartoon" data-name="style-FH-004">FH-004 · New Yorker 单格社论漫画</option>
+<option value="FH-005" data-search="FH-005 法式 Café Sketch French Café Sketch" data-name="style-FH-005">FH-005 · 法式 Café Sketch</option>
+<option value="FH-006" data-search="FH-006 日系脱力线稿漫画 Japanese Deadpan Loose-Line Cartoon" data-name="style-FH-006">FH-006 · 日系脱力线稿漫画</option>
+<option value="FH-007" data-search="FH-007 日系手帐 Doodle Japanese Notebook Doodle" data-name="style-FH-007">FH-007 · 日系手帐 Doodle</option>
+<option value="FH-008" data-search="FH-008 日系杂志随笔插画 Japanese Magazine Essay Illustration" data-name="style-FH-008">FH-008 · 日系杂志随笔插画</option>
+<option value="FH-009" data-search="FH-009 日系脱线四格漫画风 Japanese Offbeat Four-Panel Cartoon" data-name="style-FH-009">FH-009 · 日系脱线四格漫画风</option>
+<option value="FH-010" data-search="FH-010 韩系 Lifestyle Doodle Korean Lifestyle Doodle" data-name="style-FH-010">FH-010 · 韩系 Lifestyle Doodle</option>
+<option value="FH-011" data-search="FH-011 韩系黑线红点 Editorial Korean Black-Line Red-Accent Editorial" data-name="style-FH-011">FH-011 · 韩系黑线红点 Editorial</option>
+<option value="FH-012" data-search="FH-012 Indie Zine 粗糙手绘 Indie Zine Rough Drawing" data-name="style-FH-012">FH-012 · Indie Zine 粗糙手绘</option>
+<option value="FH-013" data-search="FH-013 Risograph / 双色孔版手绘 Two-Color Risograph Drawing" data-name="style-FH-013">FH-013 · Risograph / 双色孔版手绘</option>
+<option value="FH-014" data-search="FH-014 Crayon Editorial / 蜡笔社论 Crayon Editorial" data-name="style-FH-014">FH-014 · Crayon Editorial / 蜡笔社论</option>
+<option value="FH-015" data-search="FH-015 Colored Pencil Diary / 彩铅日记 Colored Pencil Diary" data-name="style-FH-015">FH-015 · Colored Pencil Diary / 彩铅日记</option>
+<option value="FH-016" data-search="FH-016 Brush Pen Cartoon / 毛笔漫画 Brush-Pen Cartoon" data-name="style-FH-016">FH-016 · Brush Pen Cartoon / 毛笔漫画</option>
+<option value="FH-017" data-search="FH-017 One-Line Character / 单线人物画 One-Line Character" data-name="style-FH-017">FH-017 · One-Line Character / 单线人物画</option>
+<option value="FH-018" data-search="FH-018 Naive Folk Cartoon / 稚拙民间漫画 Naive Folk Cartoon" data-name="style-FH-018">FH-018 · Naive Folk Cartoon / 稚拙民间漫画</option>
+<option value="FH-019" data-search="FH-019 Primitive Marker Cartoon / 粗马克笔人物 Primitive Marker Cartoon" data-name="style-FH-019">FH-019 · Primitive Marker Cartoon / 粗马克笔人物</option>
+<option value="FH-020" data-search="FH-020 Dry Brush Editorial / 干笔社论 Dry-Brush Editorial" data-name="style-FH-020">FH-020 · Dry Brush Editorial / 干笔社论</option>
+<option value="FH-021" data-search="FH-021 Ink + Flat Spot Color / 墨线点色 Ink with Flat Spot Color" data-name="style-FH-021">FH-021 · Ink + Flat Spot Color / 墨线点色</option>
+<option value="FH-022" data-search="FH-022 Notebook Margin Cartoon / 课本边角漫画 Notebook Margin Cartoon" data-name="style-FH-022">FH-022 · Notebook Margin Cartoon / 课本边角漫画</option>
+<option value="FH-023" data-search="FH-023 Deadpan Doodle / 冷脸涂鸦 Deadpan Doodle" data-name="style-FH-023">FH-023 · Deadpan Doodle / 冷脸涂鸦</option>
+<option value="FH-024" data-search="FH-024 Awkward Cute / 怪尴尬手绘 Awkward Cute" data-name="style-FH-024">FH-024 · Awkward Cute / 怪尴尬手绘</option>
+<option value="FH-025" data-search="FH-025 Heta-Uma / ヘタウマ Heta-Uma" data-name="style-FH-025">FH-025 · Heta-Uma / ヘタウマ</option>
+<option value="FH-026" data-search="FH-026 昭和レトロ少女 Showa Retro Girl Illustration" data-name="style-FH-026">FH-026 · 昭和レトロ少女</option>
+<option value="FH-027" data-search="FH-027 平成ガールズ日記 Heisei Girls Diary Illustration" data-name="style-FH-027">FH-027 · 平成ガールズ日記</option>
+<option value="FH-028" data-search="FH-028 透明水彩淡彩 Airy Transparent Watercolor" data-name="style-FH-028">FH-028 · 透明水彩淡彩</option>
+<option value="FH-029" data-search="FH-029 Copic Pastel Copic Pastel" data-name="style-FH-029">FH-029 · Copic Pastel</option>
+<option value="FH-030" data-search="FH-030 喫茶店 Retro Sketch Kissaten Retro Sketch" data-name="style-FH-030">FH-030 · 喫茶店 Retro Sketch</option>
+<option value="FH-031" data-search="FH-031 小红书奶油手绘 Creamy Social-Media Doodle" data-name="style-FH-031">FH-031 · 小红书奶油手绘</option>
+<option value="FH-032" data-search="FH-032 小红书高饱和涂鸦 High-Saturation Social Doodle" data-name="style-FH-032">FH-032 · 小红书高饱和涂鸦</option>
+<option value="FH-033" data-search="FH-033 韩国高饱和涂鸦 Korean High-Saturation Pop Doodle" data-name="style-FH-033">FH-033 · 韩国高饱和涂鸦</option>
+<option value="FH-034" data-search="FH-034 油画棒治愈手绘 Oil-Pastel Healing Illustration" data-name="style-FH-034">FH-034 · 油画棒治愈手绘</option>
+<option value="FH-035" data-search="FH-035 儿童蜡笔稚拙风 Childlike Crayon Naive Style" data-name="style-FH-035">FH-035 · 儿童蜡笔稚拙风</option>
+<option value="FH-036" data-search="FH-036 黑白钢笔冷幽默 Black-White Pen Deadpan Humor" data-name="style-FH-036">FH-036 · 黑白钢笔冷幽默</option>
+<option value="FH-037" data-search="FH-037 红蓝双色孔版 / Riso 国潮 Red-Blue Riso Guochao" data-name="style-FH-037">FH-037 · 红蓝双色孔版 / Riso 国潮</option>
+<option value="FH-038" data-search="FH-038 Mid-century Deadpan Ink Mascot Mid-century Deadpan Ink Mascot" data-name="style-FH-038">FH-038 · Mid-century Deadpan Ink Mascot</option>
+<option value="FH-039" data-search="FH-039 OscarAI Quirky Fantasy Sketchbook Character Concept" data-name="style-FH-039">FH-039 · OscarAI</option>
+<option value="FH-040" data-search="FH-040 OscarAI Medieval Dark Fantasy Ink &amp; Ochre Illustration" data-name="style-FH-040">FH-040 · OscarAI</option>
+<option value="FH-041" data-search="FH-041 midlibrary Modern Minimalist Sumi-e &amp; Red Gouache Illustration" data-name="style-FH-041">FH-041 · midlibrary</option>
+<option value="FH-042" data-search="FH-042 梵高 Van Gogh Expressive Impasto Oil Painting" data-name="style-FH-042">FH-042 · 梵高</option>
+<option value="FH-043" data-search="FH-043 复古 Risograph 与丝网印刷插画 Vintage Risograph and Silkscreen Print Illustration" data-name="style-FH-043">FH-043 · 复古 Risograph 与丝网印刷插画</option>
+<option value="FH-044" data-search="FH-044 莫奈 / Claude Monet Claude Monet" data-name="style-FH-044">FH-044 · 莫奈 / Claude Monet</option></optgroup>
+<optgroup label="FI 写实摄影与视觉大片 / Realistic, Photography &amp; Cinematic Styles" data-name="style-group-FI"><option value="FI-001" data-search="FI-001 Apple / 苹果 Apple Minimalist Tech Product Commercial Photography" data-name="style-FI-001">FI-001 · Apple / 苹果</option>
+<option value="FI-002" data-search="FI-002 MUJI / 无印良品 MUJI Japanese Naturalist Warm Home Photography" data-name="style-FI-002">FI-002 · MUJI / 无印良品</option>
+<option value="FI-003" data-search="FI-003 IKEA / 宜家 IKEA Nordic Cozy Lifestyle Interior Photography" data-name="style-FI-003">FI-003 · IKEA / 宜家</option>
+<option value="FI-004" data-search="FI-004 Aesop / 伊索 Aesop Earthy Terrazzo Minimalist Botanical Space Photography" data-name="style-FI-004">FI-004 · Aesop / 伊索</option>
+<option value="FI-005" data-search="FI-005 Nike / 耐克 Nike Dynamic Athletic Action &amp; Dramatic Contrast Photography" data-name="style-FI-005">FI-005 · Nike / 耐克</option>
+<option value="FI-006" data-search="FI-006 Patagonia / 巴塔哥尼亚 Patagonia Rugged Wilderness &amp; Extreme Outdoor Documentary" data-name="style-FI-006">FI-006 · Patagonia / 巴塔哥尼亚</option>
+<option value="FI-007" data-search="FI-007 Gucci / 古驰 Gucci 1970s Vintage Glamour Cinematic Editorial Photography" data-name="style-FI-007">FI-007 · Gucci / 古驰</option>
+<option value="FI-008" data-search="FI-008 Jacquemus / 雅克慕斯 Jacquemus French Riviera Sun-Drenched Minimal Fashion Photography" data-name="style-FI-008">FI-008 · Jacquemus / 雅克慕斯</option>
+<option value="FI-009" data-search="FI-009 National Geographic / 国家地理 National Geographic Epic Wildlife &amp; Cultural Documentary Photography" data-name="style-FI-009">FI-009 · National Geographic / 国家地理</option>
+<option value="FI-010" data-search="FI-010 Vogue / 时尚杂志 Vogue Haute Couture Dramatic Lighting Fashion Editorial" data-name="style-FI-010">FI-010 · Vogue / 时尚杂志</option>
+<option value="FI-011" data-search="FI-011 Kinfolk Kinfolk Slow-Living Low-Saturation Natural Light Photography" data-name="style-FI-011">FI-011 · Kinfolk</option>
+<option value="FI-012" data-search="FI-012 Wallpaper* Wallpaper* Architectural Modernist Geometric Interior Photography" data-name="style-FI-012">FI-012 · Wallpaper*</option>
+<option value="FI-013" data-search="FI-013 i-D i-D Raw Youth Subculture Direct-Flash Portrait Photography" data-name="style-FI-013">FI-013 · i-D</option>
+<option value="FI-014" data-search="FI-014 Dazed Dazed Avant-Garde Experimental Fashion &amp; Expressive Mood Photography" data-name="style-FI-014">FI-014 · Dazed</option>
+<option value="FI-015" data-search="FI-015 The Gentlewoman The Gentlewoman Restrained Monochrome Modern Female Portrait" data-name="style-FI-015">FI-015 · The Gentlewoman</option>
+<option value="FI-016" data-search="FI-016 Annie Leibovitz / 安妮·莱博维茨 Annie Leibovitz Cinematic Staged Narrative Portrait Photography" data-name="style-FI-016">FI-016 · Annie Leibovitz / 安妮·莱博维茨</option>
+<option value="FI-017" data-search="FI-017 Richard Avedon / 理查德·阿维顿 Richard Avedon Stark White Studio Pure Black-and-White Portrait" data-name="style-FI-017">FI-017 · Richard Avedon / 理查德·阿维顿</option>
+<option value="FI-018" data-search="FI-018 Peter Lindbergh / 彼得·林德伯格 Peter Lindbergh Natural Raw Windblown Monochrome Fashion Photography" data-name="style-FI-018">FI-018 · Peter Lindbergh / 彼得·林德伯格</option>
+<option value="FI-019" data-search="FI-019 Helmut Newton / 赫尔穆特·牛顿 Helmut Newton High-Contrast Bold Monochrome Seductive Noir" data-name="style-FI-019">FI-019 · Helmut Newton / 赫尔穆特·牛顿</option>
+<option value="FI-020" data-search="FI-020 Steve McCurry / 史蒂夫·麦凯瑞 Steve McCurry Saturated Soulful Humanist Cultural Portrait" data-name="style-FI-020">FI-020 · Steve McCurry / 史蒂夫·麦凯瑞</option>
+<option value="FI-021" data-search="FI-021 Martin Parr / 马丁·帕尔 Martin Parr Saturated Direct-Flash Satirical Everyday Documentary" data-name="style-FI-021">FI-021 · Martin Parr / 马丁·帕尔</option>
+<option value="FI-022" data-search="FI-022 Gregory Crewdson / 格雷戈里·克鲁德森 Gregory Crewdson Twilight Cinematic Mystery Staged Photography" data-name="style-FI-022">FI-022 · Gregory Crewdson / 格雷戈里·克鲁德森</option>
+<option value="FI-023" data-search="FI-023 Saul Leiter / 索尔·莱特 Saul Leiter Poetic Rainy Street &amp; Window Reflection Color Photography" data-name="style-FI-023">FI-023 · Saul Leiter / 索尔·莱特</option>
+<option value="FI-024" data-search="FI-024 Slim Aarons / 斯利姆·亚伦斯 Slim Aarons Luxurious Poolside Resort &amp; Villa High-Society Photography" data-name="style-FI-024">FI-024 · Slim Aarons / 斯利姆·亚伦斯</option>
+<option value="FI-025" data-search="FI-025 Daido Moriyama / 森山大道 Daido Moriyama Grainy High-Contrast Noir Street Photography" data-name="style-FI-025">FI-025 · Daido Moriyama / 森山大道</option>
+<option value="FI-026" data-search="FI-026 Andreas Gursky / 安德烈亚斯·古尔斯基 Andreas Gursky Monumental Scale Repetitive Geometric Architecture Photography" data-name="style-FI-026">FI-026 · Andreas Gursky / 安德烈亚斯·古尔斯基</option>
+<option value="FI-027" data-search="FI-027 Wes Anderson / 韦斯·安德森 Wes Anderson Pastel Symmetry &amp; Retro Whimsical Cinematic Aesthetic" data-name="style-FI-027">FI-027 · Wes Anderson / 韦斯·安德森</option>
+<option value="FI-028" data-search="FI-028 Wong Kar-wai / 王家卫 Wong Kar-wai Hong Kong Retro Neon Glow Atmospheric Cinematic Mood" data-name="style-FI-028">FI-028 · Wong Kar-wai / 王家卫</option>
+<option value="FI-029" data-search="FI-029 Stanley Kubrick / 斯坦利·库布里克 Stanley Kubrick One-Point Perspective Cold Symmetrical Sci-Fi Cinema" data-name="style-FI-029">FI-029 · Stanley Kubrick / 斯坦利·库布里克</option>
+<option value="FI-030" data-search="FI-030 David Fincher / 大卫·芬奇 David Fincher Desaturated Moody Green-Toned Precision Thriller Cinema" data-name="style-FI-030">FI-030 · David Fincher / 大卫·芬奇</option>
+<option value="FI-031" data-search="FI-031 淘宝电商图 / Taobao E-Commerce Taobao E-Commerce Product Commercial Photography" data-name="style-FI-031">FI-031 · 淘宝电商图 / Taobao E-Commerce</option>
+<option value="FI-032" data-search="FI-032 iPhone 17 随手拍 / iPhone 17 Snapshot iPhone 17 Candid Everyday Snapshot Photography" data-name="style-FI-032">FI-032 · iPhone 17 随手拍 / iPhone 17 Snapshot</option>
+<option value="FI-033" data-search="FI-033 监控摄像头截屏 / Security Camera Screenshot Security Camera CCTV &amp; Doorbell Surveillance Footage Photography" data-name="style-FI-033">FI-033 · 监控摄像头截屏 / Security Camera Screenshot</option>
+<option value="FI-034" data-search="FI-034 大疆无人机航拍 / DJI Drone Aerial DJI Drone Cinematic Aerial Landscape Photography" data-name="style-FI-034">FI-034 · 大疆无人机航拍 / DJI Drone Aerial</option></optgroup></select><p id="search-empty" class="muted" hidden data-name="search-empty">无匹配项，当前选择仍保持不变。</p></div>
+        <figure class="reference" data-name="reference-style">
+  <figcaption data-name="reference-caption-style">画风参考 · 上游参考，非本次成图</figcaption>
+  <img id="style-preview" class="reference-img" alt="" hidden data-name="reference-img-style">
+  <p id="style-image-loading" class="muted" hidden data-name="reference-loading-style">参考加载中，可先生成文字…</p>
+  <p id="style-image-error" class="error" hidden data-name="reference-error-style">参考未加载成功。</p>
+  <div class="ref-actions" data-name="reference-actions-style"><a id="download-style" class="button secondary" aria-disabled="true" data-name="download-style">下载参考</a><button id="retry-style" class="button secondary" type="button" hidden data-name="retry-style">重试</button></div>
+</figure>
+      </div>
+      <div class="visual-card" data-name="color-card">
+        <label for="summary-color" data-name="summary-color-label">当前主色</label>
+        <input id="summary-color" type="text" readonly data-name="summary-color">
+        <button id="change-color" type="button" class="button secondary" data-panel="color" aria-expanded="false" data-name="change-color">换主色</button>
+        <div id="color-panel" hidden data-name="color-panel"><select id="color-primary" aria-label="主色" data-name="color-primary"><option value="C-01" data-name="color-C-01">C-01 · 克莱因蓝</option>
+<option value="C-02" data-name="color-C-02">C-02 · 马若雷勒蓝</option>
+<option value="C-03" data-name="color-C-03">C-03 · 普鲁士蓝</option>
+<option value="C-04" data-name="color-C-04">C-04 · 钴蓝</option>
+<option value="C-05" data-name="color-C-05">C-05 · 群青</option>
+<option value="C-06" data-name="color-C-06">C-06 · 孔雀蓝</option>
+<option value="C-07" data-name="color-C-07">C-07 · 蒂芙尼蓝</option>
+<option value="C-08" data-name="color-C-08">C-08 · 湖蓝</option>
+<option value="C-09" data-name="color-C-09">C-09 · 薄荷绿</option>
+<option value="C-10" data-name="color-C-10">C-10 · 鼠尾草绿</option>
+<option value="C-11" data-name="color-C-11">C-11 · 祖母绿</option>
+<option value="C-12" data-name="color-C-12">C-12 · 橄榄绿</option>
+<option value="C-13" data-name="color-C-13">C-13 · 维罗纳绿</option>
+<option value="C-14" data-name="color-C-14">C-14 · 森林绿</option>
+<option value="C-15" data-name="color-C-15">C-15 · 朱砂红</option>
+<option value="C-16" data-name="color-C-16">C-16 · 中国红</option>
+<option value="C-17" data-name="color-C-17">C-17 · 勃艮第红</option>
+<option value="C-18" data-name="color-C-18">C-18 · 庞贝红</option>
+<option value="C-19" data-name="color-C-19">C-19 · 玫瑰红</option>
+<option value="C-20" data-name="color-C-20">C-20 · 洋红</option>
+<option value="C-21" data-name="color-C-21">C-21 · 珊瑚粉</option>
+<option value="C-22" data-name="color-C-22">C-22 · 灰粉</option>
+<option value="C-23" data-name="color-C-23">C-23 · 薰衣草紫</option>
+<option value="C-24" data-name="color-C-24">C-24 · 帝王紫</option>
+<option value="C-25" data-name="color-C-25">C-25 · 爱马仕橙</option>
+<option value="C-26" data-name="color-C-26">C-26 · 柿子橙</option>
+<option value="C-27" data-name="color-C-27">C-27 · 那不勒斯黄</option>
+<option value="C-28" data-name="color-C-28">C-28 · 芥末黄</option>
+<option value="C-29" data-name="color-C-29">C-29 · 赭石</option>
+<option value="C-30" data-name="color-C-30">C-30 · 象牙白</option>
+<option value="C-31" data-name="color-C-31">C-31 · 佩恩灰</option>
+<option value="C-32" data-name="color-C-32">C-32 · 炭黑</option>
+<option value="C-33" data-name="color-C-33">C-33 · 暖灰</option>
+<option value="C-34" data-name="color-C-34">C-34 · 奶油白</option>
+<option value="C-35" data-name="color-C-35">C-35 · 石板灰</option>
+<option value="C-36" data-name="color-C-36">C-36 · 米驼色</option></select></div>
+        <button id="color-reference-toggle" type="button" class="button secondary" data-panel="colorReference" aria-expanded="false" data-name="color-reference-toggle">查看配色参考</button>
+        <div id="color-reference" hidden data-name="color-reference"><figure class="reference" data-name="reference-color">
+  <figcaption data-name="reference-caption-color">配色参考 · 上游参考，非本次成图</figcaption>
+  <img id="color-preview" class="reference-img" alt="" hidden data-name="reference-img-color">
+  <p id="color-image-loading" class="muted" hidden data-name="reference-loading-color">参考加载中，可先生成文字…</p>
+  <p id="color-image-error" class="error" hidden data-name="reference-error-color">参考未加载成功。</p>
+  <div class="ref-actions" data-name="reference-actions-color"><a id="download-color" class="button secondary" aria-disabled="true" data-name="download-color">下载参考</a><button id="retry-color" class="button secondary" type="button" hidden data-name="retry-color">重试</button></div>
+</figure></div>
+      </div>
+    </div>
+    <button id="advanced-toggle" type="button" class="button secondary" data-panel="advanced" aria-expanded="false" data-name="advanced-toggle">更多设置</button>
+    <div id="advanced-panel" class="advanced" hidden data-name="advanced-panel">
+      <label for="ratio" data-name="ratio-label">画幅比例</label>
+      <select id="ratio" data-name="ratio"><option value="" data-name="ratio-default">按模板默认（不额外指定）</option>
+<option value="1:1" data-name="ratio-1:1">1:1 方形</option>
+<option value="3:4" data-name="ratio-3:4">3:4 竖版</option>
+<option value="4:5" data-name="ratio-4:5">4:5 竖版</option>
+<option value="2:3" data-name="ratio-2:3">2:3 竖版</option>
+<option value="9:16" data-name="ratio-9:16">9:16 竖版</option>
+<option value="16:9" data-name="ratio-16:9">16:9 横版</option>
+<option value="4:3" data-name="ratio-4:3">4:3 横版</option>
+<option value="3:2" data-name="ratio-3:2">3:2 横版</option>
+<option value="5:2" data-name="ratio-5:2">5:2 横版</option>
+<option value="21:9" data-name="ratio-21:9">21:9 超宽</option>
+<option value="2.35:1" data-name="ratio-2.35:1">2.35:1 电影</option></select>
+      <p id="fixed-ratio-help" class="muted" hidden data-name="fixed-ratio-help">当前任务使用固定比例。</p>
+      <label for="color-accent-1" data-name="accent1-label">点缀色 1（可选）</label>
+      <select id="color-accent-1" data-name="color-accent-1"><option value="" data-name="color-empty">不指定</option>
+<option value="C-01" data-name="color-C-01">C-01 · 克莱因蓝</option>
+<option value="C-02" data-name="color-C-02">C-02 · 马若雷勒蓝</option>
+<option value="C-03" data-name="color-C-03">C-03 · 普鲁士蓝</option>
+<option value="C-04" data-name="color-C-04">C-04 · 钴蓝</option>
+<option value="C-05" data-name="color-C-05">C-05 · 群青</option>
+<option value="C-06" data-name="color-C-06">C-06 · 孔雀蓝</option>
+<option value="C-07" data-name="color-C-07">C-07 · 蒂芙尼蓝</option>
+<option value="C-08" data-name="color-C-08">C-08 · 湖蓝</option>
+<option value="C-09" data-name="color-C-09">C-09 · 薄荷绿</option>
+<option value="C-10" data-name="color-C-10">C-10 · 鼠尾草绿</option>
+<option value="C-11" data-name="color-C-11">C-11 · 祖母绿</option>
+<option value="C-12" data-name="color-C-12">C-12 · 橄榄绿</option>
+<option value="C-13" data-name="color-C-13">C-13 · 维罗纳绿</option>
+<option value="C-14" data-name="color-C-14">C-14 · 森林绿</option>
+<option value="C-15" data-name="color-C-15">C-15 · 朱砂红</option>
+<option value="C-16" data-name="color-C-16">C-16 · 中国红</option>
+<option value="C-17" data-name="color-C-17">C-17 · 勃艮第红</option>
+<option value="C-18" data-name="color-C-18">C-18 · 庞贝红</option>
+<option value="C-19" data-name="color-C-19">C-19 · 玫瑰红</option>
+<option value="C-20" data-name="color-C-20">C-20 · 洋红</option>
+<option value="C-21" data-name="color-C-21">C-21 · 珊瑚粉</option>
+<option value="C-22" data-name="color-C-22">C-22 · 灰粉</option>
+<option value="C-23" data-name="color-C-23">C-23 · 薰衣草紫</option>
+<option value="C-24" data-name="color-C-24">C-24 · 帝王紫</option>
+<option value="C-25" data-name="color-C-25">C-25 · 爱马仕橙</option>
+<option value="C-26" data-name="color-C-26">C-26 · 柿子橙</option>
+<option value="C-27" data-name="color-C-27">C-27 · 那不勒斯黄</option>
+<option value="C-28" data-name="color-C-28">C-28 · 芥末黄</option>
+<option value="C-29" data-name="color-C-29">C-29 · 赭石</option>
+<option value="C-30" data-name="color-C-30">C-30 · 象牙白</option>
+<option value="C-31" data-name="color-C-31">C-31 · 佩恩灰</option>
+<option value="C-32" data-name="color-C-32">C-32 · 炭黑</option>
+<option value="C-33" data-name="color-C-33">C-33 · 暖灰</option>
+<option value="C-34" data-name="color-C-34">C-34 · 奶油白</option>
+<option value="C-35" data-name="color-C-35">C-35 · 石板灰</option>
+<option value="C-36" data-name="color-C-36">C-36 · 米驼色</option></select>
+      <label for="color-accent-2" data-name="accent2-label">点缀色 2（可选）</label>
+      <select id="color-accent-2" data-name="color-accent-2"><option value="" data-name="color-empty">不指定</option>
+<option value="C-01" data-name="color-C-01">C-01 · 克莱因蓝</option>
+<option value="C-02" data-name="color-C-02">C-02 · 马若雷勒蓝</option>
+<option value="C-03" data-name="color-C-03">C-03 · 普鲁士蓝</option>
+<option value="C-04" data-name="color-C-04">C-04 · 钴蓝</option>
+<option value="C-05" data-name="color-C-05">C-05 · 群青</option>
+<option value="C-06" data-name="color-C-06">C-06 · 孔雀蓝</option>
+<option value="C-07" data-name="color-C-07">C-07 · 蒂芙尼蓝</option>
+<option value="C-08" data-name="color-C-08">C-08 · 湖蓝</option>
+<option value="C-09" data-name="color-C-09">C-09 · 薄荷绿</option>
+<option value="C-10" data-name="color-C-10">C-10 · 鼠尾草绿</option>
+<option value="C-11" data-name="color-C-11">C-11 · 祖母绿</option>
+<option value="C-12" data-name="color-C-12">C-12 · 橄榄绿</option>
+<option value="C-13" data-name="color-C-13">C-13 · 维罗纳绿</option>
+<option value="C-14" data-name="color-C-14">C-14 · 森林绿</option>
+<option value="C-15" data-name="color-C-15">C-15 · 朱砂红</option>
+<option value="C-16" data-name="color-C-16">C-16 · 中国红</option>
+<option value="C-17" data-name="color-C-17">C-17 · 勃艮第红</option>
+<option value="C-18" data-name="color-C-18">C-18 · 庞贝红</option>
+<option value="C-19" data-name="color-C-19">C-19 · 玫瑰红</option>
+<option value="C-20" data-name="color-C-20">C-20 · 洋红</option>
+<option value="C-21" data-name="color-C-21">C-21 · 珊瑚粉</option>
+<option value="C-22" data-name="color-C-22">C-22 · 灰粉</option>
+<option value="C-23" data-name="color-C-23">C-23 · 薰衣草紫</option>
+<option value="C-24" data-name="color-C-24">C-24 · 帝王紫</option>
+<option value="C-25" data-name="color-C-25">C-25 · 爱马仕橙</option>
+<option value="C-26" data-name="color-C-26">C-26 · 柿子橙</option>
+<option value="C-27" data-name="color-C-27">C-27 · 那不勒斯黄</option>
+<option value="C-28" data-name="color-C-28">C-28 · 芥末黄</option>
+<option value="C-29" data-name="color-C-29">C-29 · 赭石</option>
+<option value="C-30" data-name="color-C-30">C-30 · 象牙白</option>
+<option value="C-31" data-name="color-C-31">C-31 · 佩恩灰</option>
+<option value="C-32" data-name="color-C-32">C-32 · 炭黑</option>
+<option value="C-33" data-name="color-C-33">C-33 · 暖灰</option>
+<option value="C-34" data-name="color-C-34">C-34 · 奶油白</option>
+<option value="C-35" data-name="color-C-35">C-35 · 石板灰</option>
+<option value="C-36" data-name="color-C-36">C-36 · 米驼色</option></select>
+      <div id="split-fields" hidden data-name="split-fields"><label for="split-type" data-name="split-label">双拼玩法（只执行一种）</label><select id="split-type" data-name="split-type"><option value="01" data-name="split-01">01 · 视线锚点跨界续绘</option>
+<option value="02" data-name="split-02">02 · 撕纸裂变第二世界</option>
+<option value="03" data-name="split-03">03 · 越界破框</option>
+<option value="04" data-name="split-04">04 · 微缩浮岛</option>
+<option value="05" data-name="split-05">05 · 记忆图谱平铺</option>
+<option value="06" data-name="split-06">06 · 经典悬浮落地</option>
+<option value="07" data-name="split-07">07 · 正负形咬合</option></select></div>
+      <label for="advanced-summary" data-name="advanced-summary-label">已启用设置</label>
+      <input id="advanced-summary" type="text" readonly data-name="advanced-summary">
+      <button id="restore-advanced" type="button" class="button secondary" data-name="restore-advanced">恢复更多设置默认</button>
+    </div>
+    <div class="stage-actions" data-name="visual-actions"><button id="generate" type="button" class="button primary" data-name="generate">生成提示词</button></div>
+  </section>
+  <section id="result-panel" class="stage" aria-labelledby="result-title" hidden data-name="result-panel">
+    <h2 id="result-title" tabindex="-1" data-name="result-title">你的提示词</h2>
+    <p id="result-dirty" class="banner error" hidden data-name="result-dirty">设置已修改，请重新生成后再复制或下载。</p>
+    <div id="result-ready" data-name="result-ready">
+      <label for="output" data-name="output-label">完整提示词（只读）</label>
+      <textarea id="output" rows="14" readonly data-name="output"></textarea>
+      <div class="result-actions" data-name="result-actions">
+        <button id="copy" type="button" class="button primary" disabled data-name="copy">复制提示词</button>
+        <a id="download-prompt" class="button secondary" aria-disabled="true" data-name="download-prompt">下载 TXT</a>
+        <button id="use-guide-toggle" type="button" class="button secondary" data-panel="useGuide" aria-expanded="false" data-name="use-guide-toggle">下一步怎么用</button>
+      </div>
+      <p id="copying" class="muted" hidden data-name="copying">正在复制…</p>
+      <p id="copy-ok" class="success" hidden data-name="copy-ok">已复制完整提示词。</p>
+      <p id="copy-manual" class="banner" hidden data-name="copy-manual">浏览器未允许自动复制。已选中文字，请按 Ctrl/Cmd+C 或长按手动复制。</p>
+    </div>
+    <div id="use-guide" class="guide" hidden data-name="use-guide">
+      <h3 data-name="guide-title">去自己的 AI 工具生图</h3>
+      <ol data-name="guide-steps">
+        <li data-name="guide-step1">打开你有权限使用、支持图片生成的工具，粘贴完整提示词。本站只生成文字指令。</li>
+        <li data-name="guide-step2">工具支持参考图时，上传画风参考；需要约束构图再上传版式参考；配色参考可选。照片双拼还需上传自己的照片。说明只参考画风/构图，不照搬参考里的主题、文字或人物。</li>
+        <li data-name="guide-step3">在该工具生成图片，检查中文、比例、人物和商品事实；效果不合适时回到本站修改设置并重新生成。能力、费用、额度与授权由该工具决定。</li>
+      </ol>
+      <div class="guide-downloads" data-name="guide-downloads">
+        <a id="guide-download-layout" class="button secondary" aria-disabled="true" data-name="guide-download-layout">下载版式参考</a>
+        <a id="guide-download-style" class="button secondary" aria-disabled="true" data-name="guide-download-style">下载画风参考</a>
+        <a id="guide-download-color" class="button secondary" aria-disabled="true" data-name="guide-download-color">下载配色参考</a>
+      </div>
+      <p id="guide-photo-note" class="banner" hidden data-name="guide-photo-note">照片双拼：请在生图工具上传自己的照片，本站不接收照片。</p>
+    </div>
+    <div class="stage-actions" data-name="result-back"><button type="button" class="button secondary" data-stage="visual" data-name="back-to-visual">返回修改视觉</button></div>
+  </section>
+  <aside id="help-panel" class="help" hidden data-name="help-panel">
+    <h3 data-name="help-title">怎么使用</h3>
+    <p data-name="help-text">选择用途 → 填写内容 → 使用默认视觉或展开调整 → 生成提示词 → 复制或下载后去自己的生图工具。本站不直接生成图片，不自动保存输入；刷新或关闭可能丢失内容。</p>
+    <button id="help-close" type="button" class="button secondary" data-panel="help" data-name="help-close">关闭帮助</button>
+  </aside>
+</main>
+<footer class="footer" data-name="footer">
+  <p data-name="footer-boundary">固定上游快照 · 170 图型 / 370 画风 / 36 配色 · 参考图非本次成图 · 不新增 AI 调用或账号。</p>
+  <div class="footer-actions" data-name="footer-actions"><a class="button secondary" href="../handraw-full-v3/skill-effects.html" target="_blank" rel="noopener" data-name="effects-link-footer">Skill 效果库（示意）</a><button id="reset" type="button" class="button secondary" data-name="reset">重新开始</button></div>
+</footer>
+<dialog id="reset-dialog" data-name="reset-dialog">
+  <p data-name="reset-dialog-text">重新开始会清空当前内容和结果。确定继续吗？</p>
+  <div class="dialog-actions" data-name="reset-dialog-actions"><button id="reset-confirm" type="button" class="button primary" data-name="reset-confirm">确认重新开始</button><button id="reset-cancel" type="button" class="button secondary" data-name="reset-cancel">取消</button></div>
+</dialog>
+</body>
+</html>
