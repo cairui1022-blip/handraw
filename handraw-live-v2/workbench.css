@@ -51,6 +51,10 @@ input[readonly] { background: var(--bg); }
 .stage-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
 .visual-grid { display: grid; grid-template-columns: 1fr; gap: 16px; margin: 12px 0; }
 .visual-card { border: 1px solid var(--line); border-radius: 10px; padding: 12px; }
+.quick-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 8px 0; }
+.quick-label { flex-basis: 100%; font-size: 14px; color: var(--muted); }
+.quick-chip { font-size: 14px; padding: 8px 12px; }
+.quick-chip.selected { background: var(--selected-bg); color: var(--selected-text); border-color: var(--primary); }
 .reference { margin: 12px 0 0; }
 .reference figcaption { font-size: 14px; color: var(--muted); margin-bottom: 8px; }
 .reference-img { width: 100%; max-height: 220px; object-fit: contain; background: var(--bg); border-radius: 8px; }
@@ -64,8 +68,12 @@ input[readonly] { background: var(--bg); }
 .help { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px; margin-bottom: 16px; }
 .footer { max-width: 1120px; margin: 0 auto; padding: 16px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; color: var(--muted); font-size: 14px; }
 .footer-actions { display: flex; flex-wrap: wrap; gap: 8px; }
-dialog { border: 1px solid var(--line); border-radius: 12px; padding: 20px; max-width: 420px; color: var(--text); }
+dialog { border: 1px solid var(--line); border-radius: 12px; padding: 20px; max-width: min(420px, calc(100vw - 32px)); color: var(--text); }
 dialog::backdrop { background: rgba(23, 33, 47, .4); }
+dialog h3 { margin: 0 0 8px; font-size: 18px; }
+.example-block { margin: 12px 0; }
+.example-block h4 { margin: 0 0 4px; font-size: 16px; }
+.example-block textarea { min-height: 72px; }
 .dialog-actions { display: flex; gap: 8px; margin-top: 12px; }
 @media (min-width: 768px) {
   .kind-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }

@@ -141,6 +141,27 @@ function renderWorkflow(w) {
   setPanel('color-reference-toggle', 'color-reference', w.panels.colorReference);
   setPanel('help-toggle', 'help-panel', w.panels.help);
   setPanel('use-guide-toggle', 'use-guide', w.panels.useGuide);
+  const quickLayoutsVisible = !layoutLocked;
+  $('quick-layouts').hidden = !quickLayoutsVisible;
+  for (const button of document.querySelectorAll('[data-quick-layout]')) {
+    button.hidden = !quickLayoutsVisible || button.dataset.kind !== form.kind;
+    const selected = form.layout === button.dataset.quickLayout;
+    button.classList.toggle('selected', selected);
+    button.setAttribute('aria-pressed', String(selected));
+  }
+  for (const button of document.querySelectorAll('[data-quick-style]')) {
+    const selected = form.style === button.dataset.quickStyle;
+    button.classList.toggle('selected', selected);
+    button.setAttribute('aria-pressed', String(selected));
+  }
+  for (const button of document.querySelectorAll('[data-quick-color]')) {
+    const selected = (form.colors[0] || 'C-26') === button.dataset.quickColor;
+    button.classList.toggle('selected', selected);
+    button.setAttribute('aria-pressed', String(selected));
+  }
+  const expandable = ['layout', 'style', 'color', 'advanced'].filter(panel => panel !== 'layout' || !layoutLocked);
+  $('expert-expand').setAttribute('aria-expanded', String(expandable.every(panel => w.panels[panel])));
+  $('use-example').disabled = w.catalogStatus !== 'ready';
   $('generate').disabled = w.catalogStatus !== 'ready' || !validateCurrentContent(form).ok;
 
   $('result-dirty').hidden = w.resultStatus !== 'dirty';
@@ -314,6 +335,20 @@ function focusError(error) {
   const el = $(error.field);
   if (el && !el.closest('[hidden]')) el.focus();
 }
+function exampleKey(form) {
+  if (form.kind !== 'social-card') return form.kind;
+  return {standard: 'social-standard', signature: 'social-signature', 'photo-split': 'social-photo-split', 'knowledge-cover': 'social-knowledge-cover'}[form.socialForm];
+}
+function openDialog(id) {
+  const dialog = $(id);
+  if (typeof dialog.showModal === 'function') dialog.showModal();
+  else dialog.setAttribute('open', '');
+}
+function closeDialog(id) {
+  const dialog = $(id);
+  if (typeof dialog.close === 'function') dialog.close();
+  else dialog.removeAttribute('open');
+}
 function dispatch(action) {
   const prev = workflow;
   workflow = transition(workflow, action);
@@ -363,21 +398,39 @@ $('continue-content').addEventListener('click', () => dispatch({type: 'CONTINUE'
 for (const button of document.querySelectorAll('.step')) button.addEventListener('click', () => dispatch({type: 'NAVIGATE', stage: button.dataset.stage}));
 for (const button of document.querySelectorAll('[data-panel]')) button.addEventListener('click', () => { if (!button.disabled) dispatch({type: 'TOGGLE', panel: button.dataset.panel}); });
 $('retry-catalog').addEventListener('click', () => { loadCatalog(); });
-$('reset').addEventListener('click', () => {
-  const dialog = $('reset-dialog');
-  if (typeof dialog.showModal === 'function') dialog.showModal();
-  else dialog.setAttribute('open', '');
-});
-$('reset-cancel').addEventListener('click', () => {
-  const dialog = $('reset-dialog');
-  if (typeof dialog.close === 'function') dialog.close();
-  else dialog.removeAttribute('open');
-});
+$('reset').addEventListener('click', () => openDialog('reset-dialog'));
+$('reset-cancel').addEventListener('click', () => closeDialog('reset-dialog'));
 $('reset-confirm').addEventListener('click', () => {
-  const dialog = $('reset-dialog');
-  if (typeof dialog.close === 'function') dialog.close();
-  else dialog.removeAttribute('open');
+  closeDialog('reset-dialog');
   dispatch({type: 'RESET'});
+});
+for (const button of document.querySelectorAll('[data-quick-layout]')) button.addEventListener('click', () => { if (!button.hidden) dispatch({type: 'EDIT', field: 'layout', value: button.dataset.quickLayout}); });
+for (const button of document.querySelectorAll('[data-quick-style]')) button.addEventListener('click', () => dispatch({type: 'EDIT', field: 'style', value: button.dataset.quickStyle}));
+for (const button of document.querySelectorAll('[data-quick-color]')) button.addEventListener('click', () => dispatch({type: 'EDIT', field: 'colors', value: [button.dataset.quickColor, $('color-accent-1').value, $('color-accent-2').value]}));
+$('expert-expand').addEventListener('click', () => {
+  const form = workflow.form;
+  const locked = form.kind === 'pure-image' || (form.kind === 'social-card' && form.socialForm !== 'standard');
+  for (const panel of ['layout', 'style', 'color', 'advanced']) {
+    if (panel === 'layout' && locked) continue;
+    if (!workflow.panels[panel]) dispatch({type: 'TOGGLE', panel});
+  }
+});
+$('use-example').addEventListener('click', () => {
+  const key = exampleKey(workflow.form);
+  for (const block of document.querySelectorAll('[data-example]')) block.hidden = block.dataset.example !== key;
+  openDialog('example-dialog');
+});
+$('example-cancel').addEventListener('click', () => closeDialog('example-dialog'));
+$('example-confirm').addEventListener('click', () => {
+  const block = document.querySelector(`[data-example="${exampleKey(workflow.form)}"]`);
+  closeDialog('example-dialog');
+  if (!block) return;
+  const topic = block.querySelector('[data-example-topic]');
+  const name = block.querySelector('[data-example-name]');
+  const pinyin = block.querySelector('[data-example-pinyin]');
+  if (topic) dispatch({type: 'EDIT', field: 'topic', value: topic.value});
+  if (name) dispatch({type: 'EDIT', field: 'name', value: name.value});
+  if (pinyin) dispatch({type: 'EDIT', field: 'pinyin', value: pinyin.value});
 });
 for (const link of document.querySelectorAll('a[aria-disabled]')) link.addEventListener('click', event => { if (link.getAttribute('aria-disabled') === 'true') event.preventDefault(); });
 

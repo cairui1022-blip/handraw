@@ -7,6 +7,7 @@
 <meta name="best-print-height" content="1120" data-name="meta-height">
 <meta name="device-type" content="pc" data-name="meta-device">
 <meta name="description" content="按用途、内容、视觉、结果逐步生成手绘提示词；亮色工作台，不直接出图。" data-name="meta-description">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'none'" data-name="meta-csp">
 <title data-name="title">手绘提示词工作台 · 渐进式亮色版</title>
 <link rel="stylesheet" href="./workbench.css" data-name="stylesheet">
 <script type="module" src="./workbench.mjs" data-name="module"></script>
@@ -80,7 +81,7 @@
     <p id="photo-split-note" class="banner" hidden data-name="photo-split-note">本站不接收照片。请在生图工具上传自己的照片；这里只组合双拼玩法指令。</p>
     <p id="ecommerce-note" class="banner" hidden data-name="ecommerce-note">商品主体保持写实；无资料不得虚构参数、评价、认证或承诺。</p>
     <p id="pure-image-note" class="banner" hidden data-name="pure-image-note">纯画面不生成文字、字母、标语或 Logo，也不使用图文版式。</p>
-    <div class="stage-actions" data-name="content-actions"><button id="continue-content" type="button" class="button primary" data-name="continue-content">下一步：选视觉</button></div>
+    <div class="stage-actions" data-name="content-actions"><button id="use-example" type="button" class="button secondary" disabled data-name="use-example">填入示例内容</button><button id="continue-content" type="button" class="button primary" data-name="continue-content">下一步：选视觉</button></div>
   </section>
   <section id="visual-panel" class="stage" aria-labelledby="visual-title" hidden data-name="visual-panel">
     <h2 id="visual-title" tabindex="-1" data-name="visual-title">选择视觉</h2>
@@ -89,6 +90,23 @@
       <div id="layout-card" class="visual-card" data-name="layout-card">
         <label for="summary-layout" data-name="summary-layout-label">当前版式</label>
         <input id="summary-layout" type="text" readonly data-name="summary-layout">
+        <div id="quick-layouts" class="quick-row" data-name="quick-layouts"><span class="quick-label" data-name="quick-layouts-label">常用版式（人工精选，非 AI 推荐）</span>
+        <button type="button" class="button secondary quick-chip" data-quick-layout="SC-016" data-kind="social-card" aria-pressed="false" data-name="quick-layout-SC-016">SC-016 · 极简大字小图点缀卡</button>
+<button type="button" class="button secondary quick-chip" data-quick-layout="SC-018" data-kind="social-card" aria-pressed="false" data-name="quick-layout-SC-018">SC-018 · 中心主视觉环绕信息卡</button>
+<button type="button" class="button secondary quick-chip" data-quick-layout="SC-019" data-kind="social-card" aria-pressed="false" data-name="quick-layout-SC-019">SC-019 · 中央人物细线标注卡</button>
+<button type="button" class="button secondary quick-chip" data-quick-layout="IG-001" data-kind="infographic" aria-pressed="false" data-name="quick-layout-IG-001">IG-001 · 标题金字塔图标信息图</button>
+<button type="button" class="button secondary quick-chip" data-quick-layout="IG-002" data-kind="infographic" aria-pressed="false" data-name="quick-layout-IG-002">IG-002 · 中心主图标注信息图</button>
+<button type="button" class="button secondary quick-chip" data-quick-layout="IG-003" data-kind="infographic" aria-pressed="false" data-name="quick-layout-IG-003">IG-003 · 多行左文右图信息图</button>
+<button type="button" class="button secondary quick-chip" data-quick-layout="SB-001" data-kind="comic-storyboard" aria-pressed="false" data-name="quick-layout-SB-001">SB-001 · 规则网格</button>
+<button type="button" class="button secondary quick-chip" data-quick-layout="SB-002" data-kind="comic-storyboard" aria-pressed="false" data-name="quick-layout-SB-002">SB-002 · 四格起承转合</button>
+<button type="button" class="button secondary quick-chip" data-quick-layout="SB-003" data-kind="comic-storyboard" aria-pressed="false" data-name="quick-layout-SB-003">SB-003 · 大格 + 小格</button>
+<button type="button" class="button secondary quick-chip" data-quick-layout="IP-001" data-kind="ip-character" aria-pressed="false" data-name="quick-layout-IP-001">IP-001 · IP定位卡</button>
+<button type="button" class="button secondary quick-chip" data-quick-layout="IP-002" data-kind="ip-character" aria-pressed="false" data-name="quick-layout-IP-002">IP-002 · 角色形象三视图基准图</button>
+<button type="button" class="button secondary quick-chip" data-quick-layout="IP-003" data-kind="ip-character" aria-pressed="false" data-name="quick-layout-IP-003">IP-003 · 16宫格角色微信表情包</button>
+<button type="button" class="button secondary quick-chip" data-quick-layout="EC-001" data-kind="ecommerce" aria-pressed="false" data-name="quick-layout-EC-001">EC-001 · 单品主图</button>
+<button type="button" class="button secondary quick-chip" data-quick-layout="EC-002" data-kind="ecommerce" aria-pressed="false" data-name="quick-layout-EC-002">EC-002 · 多角度展示图</button>
+<button type="button" class="button secondary quick-chip" data-quick-layout="EC-003" data-kind="ecommerce" aria-pressed="false" data-name="quick-layout-EC-003">EC-003 · 细节特写图</button>
+        </div>
         <button id="change-layout" type="button" class="button secondary" data-panel="layout" aria-expanded="false" data-name="change-layout">换版式</button>
         <div id="layout-panel" hidden data-name="layout-panel"><select id="layout" aria-label="完整图型目录" data-name="layout"><optgroup label="社媒图文" data-category="social-card" data-name="layout-group-social-card"><option value="SC-001" data-category="social-card" data-name="layout-SC-001">SC-001 · 上文下图社媒卡</option>
 <option value="SC-002" data-category="social-card" data-name="layout-SC-002">SC-002 · 文案主导底部辅助图卡</option>
@@ -271,6 +289,11 @@
       <div class="visual-card" data-name="style-card">
         <label for="summary-style" data-name="summary-style-label">当前画风</label>
         <input id="summary-style" type="text" readonly data-name="summary-style">
+        <div class="quick-row" data-name="quick-styles"><span class="quick-label" data-name="quick-styles-label">常用画风（人工精选，非 AI 推荐）</span>
+        <button type="button" class="button secondary quick-chip" data-quick-style="FA-003" aria-pressed="false" data-name="quick-style-FA-003">FA-003 · Jean-Jacques Sempé</button>
+<button type="button" class="button secondary quick-chip" data-quick-style="FA-001" aria-pressed="false" data-name="quick-style-FA-001">FA-001 · Gemma Correll</button>
+<button type="button" class="button secondary quick-chip" data-quick-style="FB-001" aria-pressed="false" data-name="quick-style-FB-001">FB-001 · Quentin Blake</button>
+        </div>
         <button id="change-style" type="button" class="button secondary" data-panel="style" aria-expanded="false" data-name="change-style">换画风</button>
         <div id="style-panel" hidden data-name="style-panel"><input id="style-search" type="search" placeholder="搜索作者、画风名称或编号" aria-label="搜索画风" data-name="style-search"><select id="style" aria-label="完整画风目录" data-name="style"><optgroup label="FA 国际社论幽默 / Editorial &amp; Humor Doodle" data-name="style-group-FA"><option value="FA-001" data-search="FA-001 Gemma Correll Playful Deadpan Doodle" data-name="style-FA-001">FA-001 · Gemma Correll</option>
 <option value="FA-002" data-search="FA-002 Saul Steinberg Conceptual Continuous-Line Editorial" data-name="style-FA-002">FA-002 · Saul Steinberg</option>
@@ -653,6 +676,11 @@
       <div class="visual-card" data-name="color-card">
         <label for="summary-color" data-name="summary-color-label">当前主色</label>
         <input id="summary-color" type="text" readonly data-name="summary-color">
+        <div class="quick-row" data-name="quick-colors"><span class="quick-label" data-name="quick-colors-label">常用主色（人工精选，非 AI 推荐）</span>
+        <button type="button" class="button secondary quick-chip" data-quick-color="C-26" aria-pressed="false" data-name="quick-color-C-26">C-26 · 柿子橙</button>
+<button type="button" class="button secondary quick-chip" data-quick-color="C-01" aria-pressed="false" data-name="quick-color-C-01">C-01 · 克莱因蓝</button>
+<button type="button" class="button secondary quick-chip" data-quick-color="C-30" aria-pressed="false" data-name="quick-color-C-30">C-30 · 象牙白</button>
+        </div>
         <button id="change-color" type="button" class="button secondary" data-panel="color" aria-expanded="false" data-name="change-color">换主色</button>
         <div id="color-panel" hidden data-name="color-panel"><select id="color-primary" aria-label="主色" data-name="color-primary"><option value="C-01" data-name="color-C-01">C-01 · 克莱因蓝</option>
 <option value="C-02" data-name="color-C-02">C-02 · 马若雷勒蓝</option>
@@ -700,6 +728,7 @@
 </figure></div>
       </div>
     </div>
+    <button id="expert-expand" type="button" class="button secondary" aria-expanded="false" data-name="expert-expand">展开全部视觉设置</button>
     <button id="advanced-toggle" type="button" class="button secondary" data-panel="advanced" aria-expanded="false" data-name="advanced-toggle">更多设置</button>
     <div id="advanced-panel" class="advanced" hidden data-name="advanced-panel">
       <label for="ratio" data-name="ratio-label">画幅比例</label>
@@ -849,6 +878,20 @@
 <dialog id="reset-dialog" data-name="reset-dialog">
   <p data-name="reset-dialog-text">重新开始会清空当前内容和结果。确定继续吗？</p>
   <div class="dialog-actions" data-name="reset-dialog-actions"><button id="reset-confirm" type="button" class="button primary" data-name="reset-confirm">确认重新开始</button><button id="reset-cancel" type="button" class="button secondary" data-name="reset-cancel">取消</button></div>
+</dialog>
+<dialog id="example-dialog" data-name="example-dialog">
+  <h3 data-name="example-dialog-title">填入示例内容</h3>
+  <p data-name="example-dialog-note">示例仅用于演示，不是你的真实资料。确认后会覆盖当前内容填写，不会自动生成或跳过步骤。</p>
+  <div class="example-block" data-example="social-standard" hidden data-name="example-social-standard"><h4 data-name="example-title-social-standard">普通社媒图文 · 演示示例</h4><label for="example-topic-social-standard" data-name="example-topic-label-social-standard">示例主题</label><textarea id="example-topic-social-standard" rows="3" readonly data-example-topic data-name="example-topic-social-standard">周末别排满计划，留点时间给自己。</textarea></div>
+<div class="example-block" data-example="social-signature" hidden data-name="example-social-signature"><h4 data-name="example-title-social-signature">姓名签名 · 演示示例</h4><label for="example-name-social-signature" data-name="example-name-label-social-signature">示例姓名</label><input id="example-name-social-signature" type="text" readonly data-example-name value="张小明" data-name="example-name-social-signature"><label for="example-pinyin-social-signature" data-name="example-pinyin-label-social-signature">示例拼音</label><input id="example-pinyin-social-signature" type="text" readonly data-example-pinyin value="ZHANG XIAOMING" data-name="example-pinyin-social-signature"></div>
+<div class="example-block" data-example="social-photo-split" hidden data-name="example-social-photo-split"><h4 data-name="example-title-social-photo-split">照片双拼 · 演示示例</h4><label for="example-topic-social-photo-split" data-name="example-topic-label-social-photo-split">示例主题</label><textarea id="example-topic-social-photo-split" rows="3" readonly data-example-topic data-name="example-topic-social-photo-split">把旅行照片做成上下双拼故事</textarea></div>
+<div class="example-block" data-example="social-knowledge-cover" hidden data-name="example-social-knowledge-cover"><h4 data-name="example-title-social-knowledge-cover">知识封面 · 演示示例</h4><label for="example-topic-social-knowledge-cover" data-name="example-topic-label-social-knowledge-cover">示例主题</label><textarea id="example-topic-social-knowledge-cover" rows="3" readonly data-example-topic data-name="example-topic-social-knowledge-cover">三分钟看懂手冲咖啡水温</textarea></div>
+<div class="example-block" data-example="infographic" hidden data-name="example-infographic"><h4 data-name="example-title-infographic">信息图 · 演示示例</h4><label for="example-topic-infographic" data-name="example-topic-label-infographic">示例主题</label><textarea id="example-topic-infographic" rows="3" readonly data-example-topic data-name="example-topic-infographic">已核验：项目三个月里程碑与负责人</textarea></div>
+<div class="example-block" data-example="comic-storyboard" hidden data-name="example-comic-storyboard"><h4 data-name="example-title-comic-storyboard">故事分镜 · 演示示例</h4><label for="example-topic-comic-storyboard" data-name="example-topic-label-comic-storyboard">示例主题</label><textarea id="example-topic-comic-storyboard" rows="3" readonly data-example-topic data-name="example-topic-comic-storyboard">猫咪第一次出门的六格小故事</textarea></div>
+<div class="example-block" data-example="ip-character" hidden data-name="example-ip-character"><h4 data-name="example-title-ip-character">角色与 IP · 演示示例</h4><label for="example-topic-ip-character" data-name="example-topic-label-ip-character">示例主题</label><textarea id="example-topic-ip-character" rows="3" readonly data-example-topic data-name="example-topic-ip-character">一只爱收集落叶的小狐狸角色设定</textarea></div>
+<div class="example-block" data-example="ecommerce" hidden data-name="example-ecommerce"><h4 data-name="example-title-ecommerce">电商商品图 · 演示示例</h4><label for="example-topic-ecommerce" data-name="example-topic-label-ecommerce">示例主题</label><textarea id="example-topic-ecommerce" rows="3" readonly data-example-topic data-name="example-topic-ecommerce">真实商品：白色陶瓷马克杯，350ml，哑光釉面</textarea></div>
+<div class="example-block" data-example="pure-image" hidden data-name="example-pure-image"><h4 data-name="example-title-pure-image">纯画面 · 演示示例</h4><label for="example-topic-pure-image" data-name="example-topic-label-pure-image">示例主题</label><textarea id="example-topic-pure-image" rows="3" readonly data-example-topic data-name="example-topic-pure-image">清晨海边的薄雾与灯塔</textarea></div>
+  <div class="dialog-actions" data-name="example-dialog-actions"><button id="example-confirm" type="button" class="button primary" data-name="example-confirm">确认填入</button><button id="example-cancel" type="button" class="button secondary" data-name="example-cancel">取消</button></div>
 </dialog>
 </body>
 </html>
