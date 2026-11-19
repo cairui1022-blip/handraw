@@ -119,9 +119,10 @@ export async function diagnoseFetchFailure({baseUrl, apiKey, fetchImpl = fetch, 
   if (signal?.aborted) return {kind: 'aborted'};
   try {
     const res = await fetchWithTimeout(fetchImpl, root + '/models', {method: 'GET', headers: {Authorization: 'Bearer ' + apiKey}}, timeoutMs, signal);
+    if (res.ok) return {kind: 'key-ok'};
+    if (res.status === 404 || res.status === 405) return {kind: 'reachable-blocked'};
     let body = null;
     try { body = await res.json(); } catch { body = null; }
-    if (res.ok) return {kind: 'key-ok'};
     return {kind: 'http-error', status: res.status, body};
   } catch {
     if (signal?.aborted) return {kind: 'aborted'};
