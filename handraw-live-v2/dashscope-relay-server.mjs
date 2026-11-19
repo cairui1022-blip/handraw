@@ -3,7 +3,7 @@
 import http from 'node:http';
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import {fileURLToPath} from 'node:url';
+import {fileURLToPath, pathToFileURL} from 'node:url';
 import {handleRequest, DEFAULT_BASE_URL} from './dashscope-relay.mjs';
 
 const APP_ROOT = path.dirname(fileURLToPath(import.meta.url));
@@ -78,10 +78,21 @@ export async function startServer({port = 0, host = '127.0.0.1', baseUrl = DEFAU
   return server;
 }
 
-if (import.meta.url === 'file://' + process.argv[1]) {
+const invokedDirectly = process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href;
+if (invokedDirectly) {
   const port = Number(argValue('--port', '8787'));
   const baseUrl = argValue('--base-url', DEFAULT_BASE_URL);
-  const server = await startServer({port, baseUrl});
+  let server;
+  try {
+    server = await startServer({port, baseUrl});
+  } catch (err) {
+    if (err?.code === 'EADDRINUSE') {
+      console.error('端口 ' + port + ' 已被占用（本机可能有别的静态服务在用，例如 python -m http.server）。');
+      console.error('请换一个端口，例如：node dashscope-relay-server.mjs --port 8900');
+      process.exit(1);
+    }
+    throw err;
+  }
   console.log('工作台已启动：http://127.0.0.1:' + server.address().port + '/start-creating.html');
   console.log('请从这个地址打开页面（而不是 GitHub Pages），否则浏览器会拦截本机 HTTP 转发请求。');
   console.log('百炼转发接口：http://127.0.0.1:' + server.address().port + '/api/generate');
