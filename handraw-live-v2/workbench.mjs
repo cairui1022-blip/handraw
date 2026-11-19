@@ -2,7 +2,7 @@ import {compilePrompt} from './prompt-core.mjs';
 import {createWorkflow, transition, validateCurrentContent, effectiveInput, canVisit} from './workflow-state.mjs';
 import {createReferenceLoader} from './reference-loader.mjs';
 import {buildDetailInfo} from './detail-info.mjs';
-import {loadSettings, resolveActive, buildGenerationRequest, parseGenerationResponse, explainFetchFailure} from './image-gen.mjs';
+import {loadSettings, saveSettings, resolveActive, buildGenerationRequest, parseGenerationResponse, explainFetchFailureDetailed, dallE3FallbackSettings} from './image-gen.mjs';
 
 const $ = id => document.getElementById(id);
 const SPECIAL_LAYOUTS = ['SC-021', 'SC-022', 'SC-023'];
@@ -377,7 +377,7 @@ async function copyCurrent() {
     }
   }
 }
-let genState = {status: 'idle', src: null, remote: false, revision: null, slow: false, errorText: '', controller: null, timedOut: false};
+let genState = {status: 'idle', src: null, remote: false, revision: null, slow: false, errorText: '', errorKind: null, controller: null, timedOut: false};
 function renderGen() {
   const resolved = resolveActive(loadSettings(localStorage));
   setAlwaysValue('gen-provider-summary', resolved ? `${resolved.label} · ${resolved.model}` : '未配置模型 Key');
@@ -416,6 +416,9 @@ function renderGen() {
   $('gen-slow').hidden = !(loading && genState.slow);
   $('gen-error').hidden = genState.status !== 'error';
   if (genState.status === 'error') setAlwaysValue('gen-error', genState.errorText || '生成失败，请重试。');
+  const offerFallback = genState.status === 'error' && genState.errorKind === 'key-ok' && Boolean(resolved) && resolved.id === 'openai' && resolved.model.startsWith('gpt-image');
+  $('gen-fallback').hidden = !offerFallback;
+  $('gen-fallback-note').hidden = !offerFallback;
 }
 async function generateImage() {
   const resolved = resolveActive(loadSettings(localStorage));
@@ -427,6 +430,8 @@ async function generateImage() {
   run.status = 'loading';
   run.slow = false;
   run.timedOut = false;
+  run.errorKind = null;
+  const startedAt = Date.now();
   const controller = new AbortController();
   run.controller = controller;
   const timeout = setTimeout(() => { run.timedOut = true; controller.abort('timeout'); }, 120000);
@@ -455,9 +460,10 @@ async function generateImage() {
     }
   } catch (err) {
     const reason = run.timedOut ? 'timeout' : (err?.name === 'AbortError' ? (controller.signal.reason || 'cancel') : null);
-    const text = await explainFetchFailure({baseUrl: resolved.baseUrl, apiKey: resolved.apiKey, status: err?.status || 0, body: err?.body || null, reason, signal: controller.signal});
+    const explained = await explainFetchFailureDetailed({baseUrl: resolved.baseUrl, apiKey: resolved.apiKey, status: err?.status || 0, body: err?.body || null, reason, elapsedMs: Date.now() - startedAt, signal: controller.signal});
     run.status = 'error';
-    run.errorText = text;
+    run.errorKind = explained.kind;
+    run.errorText = explained.text;
   } finally {
     clearTimeout(timeout);
     clearTimeout(slow);
@@ -560,6 +566,11 @@ $('restore-advanced').addEventListener('click', () => dispatch({type: 'RESET_ADV
 for (const slot of ['layout', 'style', 'color']) $('retry-' + slot).addEventListener('click', () => loader.retry(slot));
 $('generate').addEventListener('click', generateCurrent);
 $('gen-image').addEventListener('click', () => { generateImage(); });
+$('gen-fallback').addEventListener('click', () => {
+  saveSettings(localStorage, dallE3FallbackSettings(loadSettings(localStorage)));
+  $('gen-size').value = '';
+  generateImage();
+});
 $('gen-cancel').addEventListener('click', () => { if (genState.controller) genState.controller.abort('cancel'); });
 $('copy').addEventListener('click', () => { copyCurrent(); });
 $('continue-purpose').addEventListener('click', () => dispatch({type: 'CONTINUE'}));
@@ -572,7 +583,7 @@ $('reset-cancel').addEventListener('click', () => closeDialog('reset-dialog'));
 $('reset-confirm').addEventListener('click', () => {
   closeDialog('reset-dialog');
   if (genState.controller) genState.controller.abort('cancel');
-  genState = {status: 'idle', src: null, remote: false, revision: null, slow: false, errorText: '', controller: null, timedOut: false};
+  genState = {status: 'idle', src: null, remote: false, revision: null, slow: false, errorText: '', errorKind: null, controller: null, timedOut: false};
   dispatch({type: 'RESET'});
 });
 for (const slot of ['layout', 'style', 'color']) {

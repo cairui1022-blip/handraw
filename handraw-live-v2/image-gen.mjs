@@ -84,7 +84,7 @@ export function testConnectionRequest({baseUrl, apiKey}) {
   };
 }
 
-export function generationErrorText(err, status, body) {
+export function generationErrorText(err, status, body, opts = {}) {
   if (err === 'timeout' || err?.name === 'TimeoutError' || err?.message === 'timeout') return '生成超时（120 秒）。可重试、更换模型或改回默认尺寸。';
   if (err === 'cancel' || err?.name === 'AbortError') return '已取消本次生成。';
   if (status === 401 || status === 403) return 'Key 无效或无权限（401/403）：' + (apiMessage(body) || '请到模型配置检查 Key。');
@@ -94,7 +94,14 @@ export function generationErrorText(err, status, body) {
   if (status > 0) return '请求失败（' + status + '），稍后重试。';
   if (err === 'reachable-blocked') return '模型服务可达，但浏览器拦截了错误响应（部分服务对鉴权失败的响应不带 CORS 头，无法读取具体原因）。常见原因：Key 无效、余额不足或模型无权限。请到 platform.openai.com 核对 Key 与额度；也可在模型配置改用支持浏览器调用的中转地址。';
   if (err === 'unreachable') return '无法连接模型服务（网络不可达、超时或地址错误）。中国大陆网络无法直连 api.openai.com：请开启代理，或在模型配置改用支持浏览器调用的 https 中转地址。';
-  if (err === 'key-ok') return 'Key 校验通过，但本次生图请求被浏览器拦截或网络中断。请重试；若持续失败，请检查模型权限（gpt-image-1 需组织验证，可改用 dall-e-3）或更换中转地址。';
+  if (err === 'key-ok') {
+    const elapsedMs = opts?.elapsedMs;
+    if (typeof elapsedMs === 'number' && Number.isFinite(elapsedMs) && elapsedMs >= 0) {
+      if (elapsedMs >= 5000) return 'Key 校验通过，但生图连接在约 ' + Math.round(elapsedMs / 1000) + ' 秒后被中断，未收到响应。gpt-image-1 生成常需 1–3 分钟，代理、网关或中转的空闲超时可能提前切断长连接。请重试；持续失败可改用 dall-e-3（通常更快）、更换更稳定的网络或代理，或改用支持长连接的中转地址。';
+      return 'Key 校验通过，但生图请求不足 5 秒即失败，且错误响应被浏览器拦截，无法读取具体原因。这更像权限或参数被快速拒绝：gpt-image-1 需在 platform.openai.com 完成组织验证（通过后约 15 分钟生效），也可能触发限流。可改用 dall-e-3 重试，或更换支持浏览器调用的中转地址。';
+    }
+    return 'Key 校验通过，但本次生图请求被浏览器拦截或网络中断。请重试；若持续失败，请检查模型权限（gpt-image-1 需组织验证，可改用 dall-e-3）或更换中转地址。';
+  }
   return '无法连接模型服务：可能是网络、CORS 或地址问题。可在模型配置改用支持浏览器调用的兼容地址。';
 }
 function apiMessage(body) {
@@ -135,11 +142,22 @@ export async function diagnoseFetchFailure({baseUrl, apiKey, fetchImpl = fetch, 
   }
 }
 
-export async function explainFetchFailure({baseUrl, apiKey, status = 0, body = null, reason = null, fetchImpl = fetch, signal = null, timeoutMs = 8000}) {
-  if (reason === 'timeout' || reason === 'cancel') return generationErrorText(reason, 0);
-  if (status > 0) return generationErrorText(new Error('http'), status, body);
+export async function explainFetchFailureDetailed({baseUrl, apiKey, status = 0, body = null, reason = null, elapsedMs = null, fetchImpl = fetch, signal = null, timeoutMs = 8000}) {
+  if (reason === 'timeout' || reason === 'cancel') return {kind: reason, text: generationErrorText(reason, 0)};
+  if (status > 0) return {kind: 'http', text: generationErrorText(new Error('http'), status, body)};
   const diag = await diagnoseFetchFailure({baseUrl, apiKey, fetchImpl, signal, timeoutMs});
-  if (diag.kind === 'http-error') return generationErrorText(new Error('http'), diag.status, diag.body);
-  if (diag.kind === 'aborted') return generationErrorText(signal?.reason === 'timeout' ? 'timeout' : 'cancel', 0);
-  return generationErrorText(diag.kind, 0);
+  if (diag.kind === 'http-error') return {kind: 'http', text: generationErrorText(new Error('http'), diag.status, diag.body)};
+  if (diag.kind === 'aborted') {
+    const kind = signal?.reason === 'timeout' ? 'timeout' : 'cancel';
+    return {kind, text: generationErrorText(kind, 0)};
+  }
+  return {kind: diag.kind, text: generationErrorText(diag.kind, 0, null, {elapsedMs})};
+}
+
+export async function explainFetchFailure(opts) {
+  return (await explainFetchFailureDetailed(opts)).text;
+}
+
+export function dallE3FallbackSettings(settings) {
+  return {...settings, providers: {...settings.providers, openai: {...settings.providers.openai, model: 'dall-e-3'}}};
 }

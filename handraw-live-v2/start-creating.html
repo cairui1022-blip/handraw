@@ -1426,6 +1426,8 @@
         <p id="gen-loading" class="muted" hidden data-name="gen-loading">正在生成图片，通常需要 10–60 秒…</p>
         <p id="gen-slow" class="muted" hidden data-name="gen-slow">仍在生成：部分模型超过 1 分钟，可继续等待或取消。</p>
         <textarea id="gen-error" rows="3" readonly class="error-input" hidden data-name="gen-error"></textarea>
+        <button id="gen-fallback" type="button" class="button secondary" hidden data-name="gen-fallback">改用 dall-e-3 重试</button>
+        <p id="gen-fallback-note" class="muted" hidden data-name="gen-fallback-note">dall-e-3 无需组织验证，通常更快。点击后改用 dall-e-3、尺寸重置为模型默认并立即重试；提示词超过 4000 字符会被拒绝，可精简内容。</p>
         <p id="gen-stale" class="banner" hidden data-name="gen-stale">设置已修改，下方图片为上一次生成；重新生成提示词与图片后可下载。</p>
         <img id="gen-image-preview" class="gen-img" alt="本次生成的图片" hidden data-name="gen-image-preview">
       </div>
