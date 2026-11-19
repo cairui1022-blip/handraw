@@ -87,10 +87,58 @@ export function testConnectionRequest({baseUrl, apiKey}) {
 export function generationErrorText(err, status, body) {
   if (err === 'timeout' || err?.name === 'TimeoutError' || err?.message === 'timeout') return '生成超时（120 秒）。可重试、更换模型或改回默认尺寸。';
   if (err === 'cancel' || err?.name === 'AbortError') return '已取消本次生成。';
-  if (status === 401 || status === 403) return 'Key 无效或无权限（401/403）。请到模型配置检查 Key。';
-  if (status === 429) return '额度不足或触发限流（429）。稍后重试或更换模型。';
+  if (status === 401 || status === 403) return 'Key 无效或无权限（401/403）：' + (apiMessage(body) || '请到模型配置检查 Key。');
+  if (status === 429) return '额度不足或触发限流（429）：' + (apiMessage(body) || '稍后重试或更换模型。');
   if (status === 400) return '请求被拒绝（400）：' + (body?.error?.message || '请检查模型名与尺寸。');
   if (status >= 500) return '模型服务暂时不可用（5xx），稍后重试。';
   if (status > 0) return '请求失败（' + status + '），稍后重试。';
+  if (err === 'reachable-blocked') return '模型服务可达，但浏览器拦截了错误响应（部分服务对鉴权失败的响应不带 CORS 头，无法读取具体原因）。常见原因：Key 无效、余额不足或模型无权限。请到 platform.openai.com 核对 Key 与额度；也可在模型配置改用支持浏览器调用的中转地址。';
+  if (err === 'unreachable') return '无法连接模型服务（网络不可达、超时或地址错误）。中国大陆网络无法直连 api.openai.com：请开启代理，或在模型配置改用支持浏览器调用的 https 中转地址。';
+  if (err === 'key-ok') return 'Key 校验通过，但本次生图请求被浏览器拦截或网络中断。请重试；若持续失败，请检查模型权限（gpt-image-1 需组织验证，可改用 dall-e-3）或更换中转地址。';
   return '无法连接模型服务：可能是网络、CORS 或地址问题。可在模型配置改用支持浏览器调用的兼容地址。';
+}
+function apiMessage(body) {
+  const m = body?.error?.message;
+  if (typeof m !== 'string' || !m.trim()) return '';
+  const t = m.trim();
+  return t.length > 160 ? t.slice(0, 160) + '…' : t;
+}
+
+async function fetchWithTimeout(fetchImpl, url, init, timeoutMs, signal) {
+  if (signal?.aborted) throw new DOMException('Aborted', 'AbortError');
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort('timeout'), timeoutMs);
+  const onAbort = () => controller.abort(signal.reason);
+  if (signal) signal.addEventListener('abort', onAbort, {once: true});
+  try { return await fetchImpl(url, {...init, signal: controller.signal}); }
+  finally { clearTimeout(timer); if (signal) signal.removeEventListener('abort', onAbort); }
+}
+
+export async function diagnoseFetchFailure({baseUrl, apiKey, fetchImpl = fetch, signal = null, timeoutMs = 8000}) {
+  const root = baseUrl.replace(/\/+$/, '');
+  if (signal?.aborted) return {kind: 'aborted'};
+  try {
+    const res = await fetchWithTimeout(fetchImpl, root + '/models', {method: 'GET', headers: {Authorization: 'Bearer ' + apiKey}}, timeoutMs, signal);
+    let body = null;
+    try { body = await res.json(); } catch { body = null; }
+    if (res.ok) return {kind: 'key-ok'};
+    return {kind: 'http-error', status: res.status, body};
+  } catch {
+    if (signal?.aborted) return {kind: 'aborted'};
+  }
+  try {
+    await fetchWithTimeout(fetchImpl, root + '/models', {method: 'GET', mode: 'no-cors', cache: 'no-store'}, timeoutMs, signal);
+    return {kind: 'reachable-blocked'};
+  } catch {
+    return {kind: signal?.aborted ? 'aborted' : 'unreachable'};
+  }
+}
+
+export async function explainFetchFailure({baseUrl, apiKey, status = 0, body = null, reason = null, fetchImpl = fetch, signal = null, timeoutMs = 8000}) {
+  if (reason === 'timeout' || reason === 'cancel') return generationErrorText(reason, 0);
+  if (status > 0) return generationErrorText(new Error('http'), status, body);
+  const diag = await diagnoseFetchFailure({baseUrl, apiKey, fetchImpl, signal, timeoutMs});
+  if (diag.kind === 'http-error') return generationErrorText(new Error('http'), diag.status, diag.body);
+  if (diag.kind === 'aborted') return generationErrorText(signal?.reason === 'timeout' ? 'timeout' : 'cancel', 0);
+  return generationErrorText(diag.kind, 0);
 }

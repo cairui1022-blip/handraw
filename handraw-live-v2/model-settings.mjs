@@ -1,4 +1,4 @@
-import {PROVIDERS, defaultSettings, loadSettings, saveSettings, clearSettings, testConnectionRequest, generationErrorText} from './image-gen.mjs';
+import {PROVIDERS, defaultSettings, loadSettings, saveSettings, clearSettings, testConnectionRequest, explainFetchFailure} from './image-gen.mjs';
 
 const $ = id => document.getElementById(id);
 
@@ -40,11 +40,13 @@ $('save-settings').addEventListener('click', () => {
 });
 
 let testing = false;
+let testRun = 0;
 $('test-connection').addEventListener('click', async () => {
   if (testing) return;
   const check = currentResolved();
   if (check.error) { setStatus(check.error); return; }
   testing = true;
+  const run = ++testRun;
   $('test-connection').disabled = true;
   setStatus('正在测试连接…');
   try {
@@ -52,17 +54,24 @@ $('test-connection').addEventListener('click', async () => {
     const response = await fetch(url, init);
     let body = null;
     try { body = await response.json(); } catch { body = null; }
+    if (run !== testRun) return;
     if (response.ok) setStatus('连接成功（' + response.status + '）。可返回工作台生成图片。');
-    else setStatus(generationErrorText(new Error('http'), response.status, body));
-  } catch (error) {
-    setStatus(generationErrorText(error, 0));
+    else {
+      const text = await explainFetchFailure({baseUrl: check.resolved.baseUrl, apiKey: check.resolved.apiKey, status: response.status, body});
+      if (run === testRun) setStatus(text);
+    }
+  } catch {
+    const text = await explainFetchFailure({baseUrl: check.resolved.baseUrl, apiKey: check.resolved.apiKey});
+    if (run === testRun) setStatus(text);
   } finally {
-    testing = false;
-    $('test-connection').disabled = false;
+    if (run === testRun) { testing = false; $('test-connection').disabled = false; }
   }
 });
 
 $('clear-settings').addEventListener('click', () => {
+  testRun++;
+  testing = false;
+  $('test-connection').disabled = false;
   clearSettings(localStorage);
   fillForm(defaultSettings());
   $('show-keys').checked = false;

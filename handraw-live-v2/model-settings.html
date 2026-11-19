@@ -72,9 +72,9 @@
       <button id="clear-settings" type="button" class="button secondary" data-name="clear-settings">清除本浏览器全部配置</button>
     </div>
     <label for="settings-status" data-name="status-label">状态</label>
-    <input id="settings-status" type="text" readonly data-name="settings-status">
+    <textarea id="settings-status" rows="2" readonly data-name="settings-status"></textarea>
     <label data-name="show-keys-label"><input id="show-keys" type="checkbox" data-name="show-keys"> 显示 Key</label>
-    <p class="muted" data-name="settings-cors">生图由浏览器直连服务地址，需对方允许跨域（CORS）。连接失败时可改用支持浏览器调用的兼容地址；协议为 OpenAI 兼容 /images/generations。费用与额度由模型服务方决定。</p>
+    <p class="muted" data-name="settings-cors">生图由浏览器直连服务地址：需网络可达且对方允许跨域（CORS）。中国大陆网络通常无法直连 api.openai.com，需代理或中转地址；OpenAI 的 gpt-image-1 需完成组织验证，未验证可改用 dall-e-3。失败时会自动诊断并显示具体原因；也可改用支持浏览器调用的 OpenAI 兼容地址（协议 /images/generations）。费用与额度由模型服务方决定。</p>
   </section>
 </main>
 <footer class="footer" data-name="footer">

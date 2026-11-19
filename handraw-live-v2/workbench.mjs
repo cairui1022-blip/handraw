@@ -2,7 +2,7 @@ import {compilePrompt} from './prompt-core.mjs';
 import {createWorkflow, transition, validateCurrentContent, effectiveInput, canVisit} from './workflow-state.mjs';
 import {createReferenceLoader} from './reference-loader.mjs';
 import {buildDetailInfo} from './detail-info.mjs';
-import {loadSettings, resolveActive, buildGenerationRequest, parseGenerationResponse, generationErrorText} from './image-gen.mjs';
+import {loadSettings, resolveActive, buildGenerationRequest, parseGenerationResponse, explainFetchFailure} from './image-gen.mjs';
 
 const $ = id => document.getElementById(id);
 const SPECIAL_LAYOUTS = ['SC-021', 'SC-022', 'SC-023'];
@@ -454,8 +454,10 @@ async function generateImage() {
       run.revision = revision;
     }
   } catch (err) {
+    const reason = run.timedOut ? 'timeout' : (err?.name === 'AbortError' ? (controller.signal.reason || 'cancel') : null);
+    const text = await explainFetchFailure({baseUrl: resolved.baseUrl, apiKey: resolved.apiKey, status: err?.status || 0, body: err?.body || null, reason, signal: controller.signal});
     run.status = 'error';
-    run.errorText = generationErrorText(run.timedOut ? 'timeout' : err, err?.status || 0, err?.body);
+    run.errorText = text;
   } finally {
     clearTimeout(timeout);
     clearTimeout(slow);
