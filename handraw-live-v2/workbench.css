@@ -52,9 +52,18 @@ input[readonly] { background: var(--bg); }
 .visual-grid { display: grid; grid-template-columns: 1fr; gap: 16px; margin: 12px 0; }
 .visual-card { border: 1px solid var(--line); border-radius: 10px; padding: 12px; }
 .quick-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 8px 0; }
-.quick-label { flex-basis: 100%; font-size: 14px; color: var(--muted); }
 .quick-chip { font-size: 14px; padding: 8px 12px; }
 .quick-chip.selected { background: var(--selected-bg); color: var(--selected-text); border-color: var(--primary); }
+.thumb-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin: 8px 0; }
+.thumb { display: flex; flex-direction: column; gap: 2px; min-width: 44px; min-height: 44px; padding: 4px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); cursor: pointer; font: inherit; }
+.thumb img { display: block; width: 100%; aspect-ratio: 1 / 1; object-fit: contain; background: var(--bg); border-radius: 4px; }
+.thumb.selected { border-color: var(--primary); background: var(--selected-bg); }
+.thumb.selected .thumb-id { color: var(--selected-text); font-weight: 600; }
+.thumb.is-broken img { visibility: hidden; }
+.thumb-id { font-size: 14px; line-height: 1.2; color: var(--muted); text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.batch-nav { display: flex; gap: 8px; align-items: center; margin: 8px 0; }
+.batch-nav .button { flex: 0 0 auto; padding: 10px 12px; font-size: 14px; }
+.batch-nav input { flex: 1 1 auto; min-width: 0; text-align: center; font-size: 14px; padding: 10px 4px; }
 .reference { margin: 12px 0 0; }
 .reference figcaption { font-size: 14px; color: var(--muted); margin-bottom: 8px; }
 .reference-img { width: 100%; max-height: 220px; object-fit: contain; background: var(--bg); border-radius: 8px; }
@@ -78,9 +87,11 @@ dialog h3 { margin: 0 0 8px; font-size: 18px; }
 @media (min-width: 768px) {
   .kind-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .form-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .thumb-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); }
 }
 @media (min-width: 1024px) {
   .visual-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .thumb-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 }
 @media (max-width: 639px) {
   .capability, .brand span, .top-actions [data-name="effects-link"] { display: none; }
@@ -95,6 +106,8 @@ dialog h3 { margin: 0 0 8px; font-size: 18px; }
   .stage p { margin: 4px 0; }
   .kind-grid, .form-grid { gap: 8px; margin: 6px 0; }
   .kind-card, .form-card { padding: 10px; }
+  .thumb { padding: 3px; }
+  .thumb-id { font-size: 13px; }
   .button { font-size: 15px; padding: 10px 12px; }
 }
 @media (prefers-reduced-motion: reduce) {

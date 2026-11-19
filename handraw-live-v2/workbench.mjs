@@ -13,6 +13,13 @@ const refState = {
   color: {id: null, status: 'idle', src: null, slow: false}
 };
 const refVisible = {layout: false, style: false, color: false};
+const GRID_BATCH = 12;
+const gridOffset = {layout: 0, style: 0, color: 0};
+let lastLayoutFilterKey = null;
+const thumbEntries = {};
+for (const slot of ['layout', 'style', 'color']) {
+  thumbEntries[slot] = [...document.querySelectorAll(`[data-${slot}-thumb]`)].map(el => ({el, img: el.querySelector('img'), id: el.dataset[slot + 'Thumb']}));
+}
 const loader = createReferenceLoader({
   fetchImpl: (file, options) => fetch(new URL(file, import.meta.url), options),
   onUpdate: update => {
@@ -70,6 +77,60 @@ function renderLayoutOptions(form) {
   }
   for (const group of select.querySelectorAll('optgroup')) group.hidden = ![...group.children].some(option => !option.hidden);
 }
+function gridItems(slot, form) {
+  if (slot === 'layout') {
+    if (form.kind === 'pure-image') return [];
+    if (form.kind === 'social-card') {
+      if (form.socialForm === 'standard') return catalog.layouts.filter(item => item.category === 'social-card' && !SPECIAL_LAYOUTS.includes(item.id));
+      return catalog.layouts.filter(item => item.id === form.layout);
+    }
+    return catalog.layouts.filter(item => item.category === form.kind);
+  }
+  if (slot === 'style') {
+    const query = $('style-search').value.trim().toLowerCase();
+    return catalog.styles.filter(item => (item.number + ' ' + item.reference + ' ' + item.generation_name).toLowerCase().includes(query));
+  }
+  return catalog.colors;
+}
+function renderThumbGrid(slot, form) {
+  const prev = $(slot + '-batch-prev');
+  const next = $(slot + '-batch-next');
+  const info = $(slot + '-batch-info');
+  const nav = prev.parentElement;
+  const locked = slot === 'layout' && (form.kind === 'pure-image' || (form.kind === 'social-card' && form.socialForm !== 'standard'));
+  const grid = $(slot + '-thumb-grid');
+  grid.hidden = locked;
+  nav.hidden = locked;
+  const active = workflow.stage === 'visual' && Boolean(catalog) && !locked;
+  const items = active ? gridItems(slot, form) : [];
+  const total = items.length;
+  const batches = Math.ceil(total / GRID_BATCH);
+  if (active && gridOffset[slot] > Math.max(0, batches - 1)) gridOffset[slot] = Math.max(0, batches - 1);
+  const offset = gridOffset[slot];
+  const windowIds = new Set(items.slice(offset * GRID_BATCH, offset * GRID_BATCH + GRID_BATCH).map(item => item.id || item.number));
+  const selectedId = currentSlotId(slot);
+  for (const {el, img, id} of thumbEntries[slot]) {
+    const show = windowIds.has(id);
+    el.hidden = !show;
+    if (show) {
+      const src = 'references/img/' + id + '.webp';
+      if (img.getAttribute('src') !== src) {
+        img.setAttribute('src', src);
+        el.classList.remove('is-broken');
+      }
+      const selected = id === selectedId;
+      el.classList.toggle('selected', selected);
+      el.setAttribute('aria-pressed', String(selected));
+    } else {
+      img.removeAttribute('src');
+      el.classList.remove('selected', 'is-broken');
+      el.setAttribute('aria-pressed', 'false');
+    }
+  }
+  prev.disabled = !active || total === 0 || offset <= 0;
+  next.disabled = !active || total === 0 || offset >= batches - 1;
+  info.value = !catalog ? '目录加载中…' : !active ? '' : `${total === 0 ? 0 : offset + 1} / ${batches} 批 · 共 ${total} 项`;
+}
 function renderErrors(w) {
   for (const node of document.querySelectorAll('[data-error]')) node.hidden = !(w.error && node.id === 'error-' + w.error.code);
 }
@@ -110,6 +171,12 @@ function renderWorkflow(w) {
   $('continue-content').disabled = w.catalogStatus !== 'ready';
 
   renderLayoutOptions(form);
+  const layoutFilterKey = form.kind + ':' + form.socialForm;
+  if (layoutFilterKey !== lastLayoutFilterKey) {
+    gridOffset.layout = 0;
+    lastLayoutFilterKey = layoutFilterKey;
+  }
+  for (const slot of ['layout', 'style', 'color']) renderThumbGrid(slot, form);
   $('layout-card').hidden = pure;
   $('change-layout').disabled = layoutLocked;
   setValue('layout', form.layout);
@@ -268,6 +335,8 @@ function filterStyles() {
   }
   for (const group of select.querySelectorAll('optgroup')) group.hidden = [...group.children].every(option => option.hidden);
   $('search-empty').hidden = matches > 0;
+  gridOffset.style = 0;
+  renderThumbGrid('style', workflow.form);
 }
 function updateExportLinks(w) {
   const link = $('download-prompt');
@@ -407,6 +476,20 @@ $('reset-confirm').addEventListener('click', () => {
 for (const button of document.querySelectorAll('[data-quick-layout]')) button.addEventListener('click', () => { if (!button.hidden) dispatch({type: 'EDIT', field: 'layout', value: button.dataset.quickLayout}); });
 for (const button of document.querySelectorAll('[data-quick-style]')) button.addEventListener('click', () => dispatch({type: 'EDIT', field: 'style', value: button.dataset.quickStyle}));
 for (const button of document.querySelectorAll('[data-quick-color]')) button.addEventListener('click', () => dispatch({type: 'EDIT', field: 'colors', value: [button.dataset.quickColor, $('color-accent-1').value, $('color-accent-2').value]}));
+for (const slot of ['layout', 'style', 'color']) {
+  for (const {el, img, id} of thumbEntries[slot]) {
+    img.addEventListener('error', () => el.classList.add('is-broken'));
+    img.addEventListener('load', () => el.classList.remove('is-broken'));
+    el.addEventListener('click', () => {
+      if (el.hidden) return;
+      if (slot === 'layout') dispatch({type: 'EDIT', field: 'layout', value: id});
+      else if (slot === 'style') dispatch({type: 'EDIT', field: 'style', value: id});
+      else dispatch({type: 'EDIT', field: 'colors', value: [id, $('color-accent-1').value, $('color-accent-2').value]});
+    });
+  }
+  $(slot + '-batch-prev').addEventListener('click', () => { gridOffset[slot] -= 1; renderThumbGrid(slot, workflow.form); });
+  $(slot + '-batch-next').addEventListener('click', () => { gridOffset[slot] += 1; renderThumbGrid(slot, workflow.form); });
+}
 $('expert-expand').addEventListener('click', () => {
   const form = workflow.form;
   const locked = form.kind === 'pure-image' || (form.kind === 'social-card' && form.socialForm !== 'standard');
